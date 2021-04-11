@@ -78,7 +78,8 @@ func TestLogWriter_typical_GET_JSON(t *testing.T) {
 <-- Content-Type:   application/json; charset=UTF-8
 
 {"A":"foo","B":7}
---------
+
+---
 `), buf.String())
 }
 
@@ -118,7 +119,8 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 <-- Content-Length: 3
 <-- Content-Type:   application/octet-stream
 <-- binary content [3]byte
---------
+
+---
 `), buf.String())
 }
 
@@ -152,6 +154,7 @@ func TestLogWriter_typical_PUT(t *testing.T) {
 {"A":"foo","B":7}
 
 <-- no headers
---------
+
+---
 `), buf.String())
 }

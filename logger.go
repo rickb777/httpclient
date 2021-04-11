@@ -43,7 +43,7 @@ func LogWriter(out io.Writer) Logger {
 			printPart(out, item.Request.Header, "-->", item.Request.Body)
 			fmt.Fprintln(out)
 			printPart(out, item.Response.Header, "<--", item.Response.Body)
-			fmt.Fprintln(out, "--------")
+			fmt.Fprintln(out, "\n---")
 		}
 	}
 }

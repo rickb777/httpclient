@@ -1,9 +1,11 @@
 package httpclient
 
 import (
+	"bytes"
 	"errors"
 	"github.com/onsi/gomega"
 	"github.com/rickb777/httpclient/testhttpclient"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +15,7 @@ func TestLoggingClient_200_OK_WithHeadersAndBodies(t *testing.T) {
 	g := gomega.NewWithT(t)
 
 	target := "http://somewhere.com/a/b/c"
-	req := httptest.NewRequest("GET", target, nil)
+	req, _ := http.NewRequest("GET", target, nil)
 
 	var lvl Level
 	for lvl = Discrete; lvl <= WithHeadersAndBodies; lvl++ {
@@ -43,6 +45,9 @@ Content-Length: 18
 
 		g.Expect(err).NotTo(gomega.HaveOccurred())
 		g.Expect(res.StatusCode).To(gomega.Equal(http.StatusOK))
+		buf := &bytes.Buffer{}
+		io.Copy(buf, res.Body)
+		g.Expect(buf.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), "%d", lvl)
 	}
 }
 

@@ -77,12 +77,13 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 	item.Request.Header = req.Header
 
 	if l.level == WithHeadersAndBodies {
-		if (req.ContentLength <= 0 && req.Body != nil && req.Body != http.NoBody) || req.GetBody == nil {
-			err := cacheRequestBody(req)
-			if err != nil {
-				return nil, err
-			}
-		}
+		//if (req.ContentLength <= 0 && req.Body != nil && req.Body != http.NoBody) || req.GetBody == nil {
+		//if req.Body != nil && req.Body != http.NoBody {
+		//	err := cacheRequestBody(req)
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//}
 
 		if req.Body != nil && req.Body != http.NoBody {
 			rdr, _ := req.GetBody()
@@ -114,35 +115,15 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 		if err != nil {
 			return nil, err
 		}
+		res.Body = io.NopCloser(bytes.NewBuffer(item.Response.Body))
 	}
 
 	l.log(item)
 	return res, err
 }
 
-// cacheRequestBody handles the unusual case is of a body being provided
-// but it not being one of the common buffer types. So we cache the body
-// in a new buffer to ensure it can be inspected later.
-//
-// See http.NewRequestWithContext for further insight.
-func cacheRequestBody(req *http.Request) error {
-	in := req.Body
-	buf, err := readIntoBuffer(in)
-	if err != nil {
-		return err
-	}
-
-	bs := buf.Bytes()
-	req.Body = io.NopCloser(buf)
-	req.ContentLength = int64(buf.Len())
-	req.GetBody = func() (io.ReadCloser, error) {
-		r := bytes.NewReader(bs)
-		return io.NopCloser(r), nil
-	}
-	return nil
-}
-
-func captureBytes(in io.Reader) ([]byte, error) {
+func captureBytes(in io.ReadCloser) ([]byte, error) {
+	defer in.Close()
 	buf, err := readIntoBuffer(in)
 	if err != nil {
 		return nil, err
