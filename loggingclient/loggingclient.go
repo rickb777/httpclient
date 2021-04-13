@@ -1,7 +1,8 @@
-package httpclient
+package loggingclient
 
 import (
 	"bytes"
+	"github.com/rickb777/httpclient"
 	"io"
 	"net/http"
 	"strings"
@@ -27,24 +28,19 @@ const (
 	WithHeaders
 
 	// WithHeadersAndBodies log messages contain a summary and the request/response headers and bodies
+	// Textual bodies are included in the log; for binary content, the size is shown instead.
 	WithHeadersAndBodies
 )
 
-// HttpClient indicates the core function in http.Client, allowing features
-// to be nested easily.
-type HttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 // LoggingClient is a HttpClient with a pluggable logger.
 type LoggingClient struct {
-	upstream HttpClient
+	upstream httpclient.HttpClient
 	log      Logger
 	level    Level
 }
 
 // NewLoggingClient wraps an upstream client and logs all requests made to it.
-func NewLoggingClient(upstream HttpClient, logger Logger, level Level) HttpClient {
+func NewLoggingClient(upstream httpclient.HttpClient, logger Logger, level Level) httpclient.HttpClient {
 	if upstream == nil || logger == nil {
 		panic("Incorrect setup")
 	}
@@ -77,14 +73,6 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 	item.Request.Header = req.Header
 
 	if l.level == WithHeadersAndBodies {
-		//if (req.ContentLength <= 0 && req.Body != nil && req.Body != http.NoBody) || req.GetBody == nil {
-		//if req.Body != nil && req.Body != http.NoBody {
-		//	err := cacheRequestBody(req)
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//}
-
 		if req.Body != nil && req.Body != http.NoBody {
 			buf, _ := readIntoBuffer(req.Body)
 			item.Request.Body = buf.Bytes()
