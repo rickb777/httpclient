@@ -86,6 +86,9 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 		//}
 
 		if req.Body != nil && req.Body != http.NoBody {
+			buf, _ := readIntoBuffer(req.Body)
+			item.Request.Body = buf.Bytes()
+		} else if req.GetBody != nil {
 			rdr, _ := req.GetBody()
 			buf, _ := readIntoBuffer(rdr)
 			item.Request.Body = buf.Bytes()
