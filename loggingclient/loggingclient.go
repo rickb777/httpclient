@@ -39,8 +39,8 @@ type LoggingClient struct {
 	level    Level
 }
 
-// NewLoggingClient wraps an upstream client and logs all requests made to it.
-func NewLoggingClient(upstream httpclient.HttpClient, logger Logger, level Level) httpclient.HttpClient {
+// New wraps an upstream client and logs all requests made to it.
+func New(upstream httpclient.HttpClient, logger Logger, level Level) httpclient.HttpClient {
 	if upstream == nil || logger == nil {
 		panic("Incorrect setup")
 	}

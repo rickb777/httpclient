@@ -40,7 +40,7 @@ Content-Length: 18
 			g.Expect(item.Level).To(gomega.Equal(lvl))
 		}
 
-		client := NewLoggingClient(testClient, logger, lvl)
+		client := New(testClient, logger, lvl)
 		res, err := client.Do(req)
 
 		g.Expect(err).NotTo(gomega.HaveOccurred())
@@ -77,7 +77,7 @@ Content-Length: 18
 			g.Expect(item.URL).To(gomega.Equal(expected))
 		}
 
-		client := NewLoggingClient(testClient, logger, lvl)
+		client := New(testClient, logger, lvl)
 		_, _ = client.Do(req)
 	}
 }
@@ -100,7 +100,7 @@ func TestLoggingClient_error(t *testing.T) {
 		g.Expect(item.Duration).To(gomega.BeNumerically(">", 0))
 	}
 
-	client := NewLoggingClient(testClient, logger, 0)
+	client := New(testClient, logger, 0)
 	_, err := client.Do(req)
 
 	g.Expect(err).To(gomega.HaveOccurred())
