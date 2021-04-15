@@ -111,6 +111,10 @@ func (m *MockHttpClient) AddOutcome(method, url string, outcome Outcome) *MockHt
 }
 
 func (m *MockHttpClient) Do(req *http.Request) (*http.Response, error) {
+	return m.RoundTrip(req)
+}
+
+func (m *MockHttpClient) RoundTrip(req *http.Request) (*http.Response, error) {
 	m.CapturedRequests = append(m.CapturedRequests, req.Clone(context.Background()))
 
 	match := fmt.Sprintf("%s %s", req.Method, req.URL)
