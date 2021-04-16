@@ -118,6 +118,6 @@ func captureBytes(in io.ReadCloser) ([]byte, error) {
 
 func readIntoBuffer(in io.Reader) (*bytes.Buffer, error) {
 	buf := &bytes.Buffer{}
-	_, err := io.Copy(buf, in)
+	_, err := buf.ReadFrom(in)
 	return buf, err
 }

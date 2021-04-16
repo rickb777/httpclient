@@ -53,7 +53,7 @@ func printPart(out io.Writer, hdrs http.Header, prefix string, body []byte) {
 	if IsTextual(hdrs.Get("Content-Type")) {
 		if len(body) > 0 {
 			fmt.Fprintln(out)
-			io.Copy(out, bytes.NewBuffer(body))
+			bytes.NewBuffer(body).WriteTo(out)
 		}
 	} else if len(body) > 0 {
 		fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))

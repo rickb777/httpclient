@@ -144,7 +144,7 @@ func (m *MockHttpClient) RoundTrip(req *http.Request) (*http.Response, error) {
 // TODO possibly remove this - see rest.ReadString
 
 func ReadString(r io.Reader) string {
-	buf := &strings.Builder{}
-	io.Copy(buf, r)
+	buf := &bytes.Buffer{}
+	buf.ReadFrom(r)
 	return buf.String()
 }

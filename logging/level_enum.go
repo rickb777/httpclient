@@ -27,11 +27,6 @@ func (i Level) String() string {
 	return levelEnumStrings[levelEnumIndex[o]:levelEnumIndex[o+1]]
 }
 
-// Tag returns the string representation of a Level. This is an alias for String.
-func (i Level) Tag() string {
-	return i.String()
-}
-
 // Ordinal returns the ordinal number of a Level.
 func (i Level) Ordinal() int {
 	switch i {
