@@ -3,24 +3,28 @@ package loggingtransport
 import (
 	"bytes"
 	"errors"
-	"github.com/onsi/gomega"
-	"github.com/rickb777/httpclient/logging"
-	"github.com/rickb777/httpclient/testhttpclient"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/onsi/gomega"
+	"github.com/rickb777/httpclient/logging"
+	"github.com/rickb777/httpclient/testhttpclient"
 )
 
 func TestLoggingClient_200_OK_WithHeadersAndBodies(t *testing.T) {
 	g := gomega.NewWithT(t)
 
+	input := "Sunny day outside"
 	target := "http://somewhere.com/a/b/c"
-	req, _ := http.NewRequest("GET", target, nil)
 
 	var lvl logging.Level
 	for lvl = logging.Discrete; lvl <= logging.WithHeadersAndBodies; lvl++ {
-		testClient := testhttpclient.New(t).AddLiteralResponse("GET", target,
+		info := lvl.String()
+		req := httptest.NewRequest("POST", target, strings.NewReader(input))
+		testClient := testhttpclient.New(t).AddLiteralResponse("POST", target,
 			`HTTP/1.1 200 OK
 Content-Type: application/json; charset=UTF-8
 Content-Length: 18
@@ -29,26 +33,29 @@ Content-Length: 18
 `)
 
 		logger := func(item *logging.LogItem) {
-			g.Expect(item.Method).To(gomega.Equal(req.Method))
-			g.Expect(item.URL).To(gomega.Equal(req.URL.String()))
-			g.Expect(item.Request.Body).To(gomega.HaveLen(0))
+			g.Expect(item.Method).To(gomega.Equal(req.Method), info)
+			g.Expect(item.URL).To(gomega.Equal(req.URL.String()), info)
 			if lvl == logging.WithHeadersAndBodies {
-				g.Expect(string(item.Response.Body)).To(gomega.Equal(`{"A":"foo","B":7}` + "\n"))
+				g.Expect(string(item.Request.Body)).To(gomega.Equal(input), info)
+				g.Expect(string(item.Response.Body)).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
 			}
-			g.Expect(item.StatusCode).To(gomega.Equal(http.StatusOK))
-			g.Expect(item.Err).NotTo(gomega.HaveOccurred())
-			g.Expect(item.Duration).To(gomega.BeNumerically(">", 0))
-			g.Expect(item.Level).To(gomega.Equal(lvl))
+			g.Expect(item.StatusCode).To(gomega.Equal(http.StatusOK), info)
+			g.Expect(item.Err).NotTo(gomega.HaveOccurred(), info)
+			g.Expect(item.Duration).To(gomega.BeNumerically(">", 0), info)
+			g.Expect(item.Level).To(gomega.Equal(lvl), info)
 		}
 
 		client := New(testClient, logger, lvl)
 		res, err := client.RoundTrip(req)
 
-		g.Expect(err).NotTo(gomega.HaveOccurred())
-		g.Expect(res.StatusCode).To(gomega.Equal(http.StatusOK))
+		g.Expect(err).NotTo(gomega.HaveOccurred(), info)
+		g.Expect(res.StatusCode).To(gomega.Equal(http.StatusOK), info)
 		buf := &bytes.Buffer{}
+		io.Copy(buf, req.Body)
+		g.Expect(buf.String()).To(gomega.Equal(input), info)
+		buf.Reset()
 		io.Copy(buf, res.Body)
-		g.Expect(buf.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), "%d", lvl)
+		g.Expect(buf.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
 	}
 }
 

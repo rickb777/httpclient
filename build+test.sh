@@ -3,6 +3,9 @@
 cd "$(dirname $0)"
 PATH=$HOME/go/bin:$PATH
 
+echo "go mod download"
+go mod download
+
 echo "go test ./..."
 go test ./...
 

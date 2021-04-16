@@ -2,11 +2,12 @@ package loggingtransport
 
 import (
 	"bytes"
-	"github.com/rickb777/httpclient/logging"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/rickb777/httpclient/logging"
 )
 
 // LoggingTransport is a http.RoundTripper with a pluggable logger.
@@ -64,6 +65,11 @@ func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error)
 		if req.Body != nil && req.Body != http.NoBody {
 			buf, _ := readIntoBuffer(req.Body)
 			item.Request.Body = buf.Bytes()
+			req.Body = io.NopCloser(bytes.NewBuffer(item.Request.Body))
+			req.GetBody = func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewBuffer(item.Request.Body)), nil
+			}
+
 		} else if req.GetBody != nil {
 			rdr, _ := req.GetBody()
 			buf, _ := readIntoBuffer(rdr)

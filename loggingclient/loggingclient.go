@@ -29,39 +29,44 @@ func New(upstream httpclient.HttpClient, logger logging.Logger, level logging.Le
 	}
 }
 
-func (l *LoggingClient) SetCheckRedirect(fn func(req *http.Request, via []*http.Request) error) {
-	if hc, ok := l.upstream.(*http.Client); ok {
+func (lc *LoggingClient) SetCheckRedirect(fn func(req *http.Request, via []*http.Request) error) {
+	if hc, ok := lc.upstream.(*http.Client); ok {
 		hc.CheckRedirect = fn
-	} else if cr, ok := l.upstream.(httpclient.ControlledRedirectClient); ok {
+	} else if cr, ok := lc.upstream.(httpclient.ControlledRedirectClient); ok {
 		cr.SetCheckRedirect(fn)
 	}
 }
 
-func (l *LoggingClient) Do(req *http.Request) (*http.Response, error) {
-	if l.level == logging.Off {
-		return l.upstream.Do(req)
+func (lc *LoggingClient) Do(req *http.Request) (*http.Response, error) {
+	if lc.level == logging.Off {
+		return lc.upstream.Do(req)
 	}
-	return l.loggingDo(req)
+	return lc.loggingDo(req)
 }
 
-func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
+func (lc *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 	item := &logging.LogItem{
 		Method: req.Method,
 		URL:    req.URL.String(),
-		Level:  l.level,
+		Level:  lc.level,
 	}
 
-	if l.level <= logging.Discrete {
+	if lc.level <= logging.Discrete {
 		parts := strings.SplitN(item.URL, "?", 2)
 		item.URL = parts[0]
 	}
 
 	item.Request.Header = req.Header
 
-	if l.level == logging.WithHeadersAndBodies {
+	if lc.level == logging.WithHeadersAndBodies {
 		if req.Body != nil && req.Body != http.NoBody {
 			buf, _ := readIntoBuffer(req.Body)
 			item.Request.Body = buf.Bytes()
+			req.Body = io.NopCloser(bytes.NewBuffer(item.Request.Body))
+			req.GetBody = func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewBuffer(item.Request.Body)), nil
+			}
+
 		} else if req.GetBody != nil {
 			rdr, _ := req.GetBody()
 			buf, _ := readIntoBuffer(rdr)
@@ -70,7 +75,7 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 	}
 
 	t0 := time.Now().UTC()
-	res, err := l.upstream.Do(req)
+	res, err := lc.upstream.Do(req)
 	item.Duration = time.Now().UTC().Sub(t0)
 
 	if res != nil {
@@ -79,15 +84,15 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 
 	if err != nil {
 		item.Err = err
-		l.log(item)
+		lc.log(item)
 		return res, err
 	}
 
-	if l.level >= logging.WithHeaders {
+	if lc.level >= logging.WithHeaders {
 		item.Response.Header = res.Header
 	}
 
-	if l.level == logging.WithHeadersAndBodies {
+	if lc.level == logging.WithHeadersAndBodies {
 		item.Response.Body, err = captureBytes(res.Body)
 		if err != nil {
 			return nil, err
@@ -95,7 +100,7 @@ func (l *LoggingClient) loggingDo(req *http.Request) (*http.Response, error) {
 		res.Body = io.NopCloser(bytes.NewBuffer(item.Response.Body))
 	}
 
-	l.log(item)
+	lc.log(item)
 	return res, err
 }
 
