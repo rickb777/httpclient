@@ -7,3 +7,8 @@ import "net/http"
 type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
+
+type ControlledRedirectClient interface {
+	HttpClient
+	SetCheckRedirect(func(req *http.Request, via []*http.Request) error)
+}

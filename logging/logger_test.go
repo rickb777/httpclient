@@ -1,4 +1,4 @@
-package loggingclient
+package logging
 
 import (
 	"bytes"

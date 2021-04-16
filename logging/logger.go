@@ -1,4 +1,4 @@
-package loggingclient
+package logging
 
 import (
 	"bytes"
@@ -67,7 +67,7 @@ func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
 	}
 
 	var keys []string
-	for k, _ := range hdrs {
+	for k := range hdrs {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)

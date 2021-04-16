@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/onsi/gomega"
+	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/testhttpclient"
 	"io"
 	"net/http"
@@ -17,8 +18,8 @@ func TestLoggingClient_200_OK_WithHeadersAndBodies(t *testing.T) {
 	target := "http://somewhere.com/a/b/c"
 	req, _ := http.NewRequest("GET", target, nil)
 
-	var lvl Level
-	for lvl = Discrete; lvl <= WithHeadersAndBodies; lvl++ {
+	var lvl logging.Level
+	for lvl = logging.Discrete; lvl <= logging.WithHeadersAndBodies; lvl++ {
 		testClient := testhttpclient.New(t).AddLiteralResponse("GET", target,
 			`HTTP/1.1 200 OK
 Content-Type: application/json; charset=UTF-8
@@ -27,11 +28,11 @@ Content-Length: 18
 {"A":"foo","B":7}
 `)
 
-		logger := func(item *LogItem) {
+		logger := func(item *logging.LogItem) {
 			g.Expect(item.Method).To(gomega.Equal(req.Method))
 			g.Expect(item.URL).To(gomega.Equal(req.URL.String()))
 			g.Expect(item.Request.Body).To(gomega.HaveLen(0))
-			if lvl == WithHeadersAndBodies {
+			if lvl == logging.WithHeadersAndBodies {
 				g.Expect(string(item.Response.Body)).To(gomega.Equal(`{"A":"foo","B":7}` + "\n"))
 			}
 			g.Expect(item.StatusCode).To(gomega.Equal(http.StatusOK))
@@ -57,11 +58,11 @@ func TestLoggingClient_200_OK_Levels(t *testing.T) {
 	target := "http://somewhere.com/a/b/c?foo=1&bar=2"
 	req := httptest.NewRequest("GET", target, nil)
 
-	cases := map[Level]string{
-		Discrete:             "http://somewhere.com/a/b/c",
-		Summary:              "http://somewhere.com/a/b/c?foo=1&bar=2",
-		WithHeaders:          "http://somewhere.com/a/b/c?foo=1&bar=2",
-		WithHeadersAndBodies: "http://somewhere.com/a/b/c?foo=1&bar=2",
+	cases := map[logging.Level]string{
+		logging.Discrete:             "http://somewhere.com/a/b/c",
+		logging.Summary:              "http://somewhere.com/a/b/c?foo=1&bar=2",
+		logging.WithHeaders:          "http://somewhere.com/a/b/c?foo=1&bar=2",
+		logging.WithHeadersAndBodies: "http://somewhere.com/a/b/c?foo=1&bar=2",
 	}
 
 	for lvl, expected := range cases {
@@ -73,7 +74,7 @@ Content-Length: 18
 {"A":"foo","B":7}
 `)
 
-		logger := func(item *LogItem) {
+		logger := func(item *logging.LogItem) {
 			g.Expect(item.URL).To(gomega.Equal(expected))
 		}
 
@@ -90,7 +91,7 @@ func TestLoggingClient_error(t *testing.T) {
 	theError := errors.New("Kaboom!")
 	testClient := testhttpclient.New(t).AddError("GET", target, theError)
 
-	logger := func(item *LogItem) {
+	logger := func(item *logging.LogItem) {
 		g.Expect(item.Method).To(gomega.Equal(req.Method))
 		g.Expect(item.URL).To(gomega.Equal(req.URL))
 		g.Expect(item.Request.Body).To(gomega.HaveLen(0))
