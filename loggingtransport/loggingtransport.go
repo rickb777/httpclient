@@ -2,11 +2,9 @@ package loggingtransport
 
 import (
 	"bytes"
+	"github.com/rickb777/httpclient/logging"
 	"io"
 	"net/http"
-	"time"
-
-	"github.com/rickb777/httpclient/logging"
 )
 
 // LoggingTransport is a http.RoundTripper with a pluggable logger.
@@ -77,9 +75,11 @@ func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error)
 		}
 	}
 
-	t0 := time.Now().UTC()
+	item.Start = logging.Now()
+
 	res, err := lt.upstream.RoundTrip(req)
-	item.Duration = time.Now().UTC().Sub(t0)
+
+	item.Duration = logging.Now().Sub(item.Start)
 
 	if res != nil {
 		item.StatusCode = res.StatusCode

@@ -25,6 +25,7 @@ type LogContent struct {
 	Body   []byte
 }
 
+// LogItem records information about one HTTP round-trip.
 type LogItem struct {
 	Method     string
 	URL        *url.URL
@@ -37,7 +38,14 @@ type LogItem struct {
 	Level      Level
 }
 
+// Logger is a function that processes log items, usually by writing them
+// to a log file.
 type Logger func(item *LogItem)
+
+// Now provides the current time. It can be stubbed for testing.
+var Now = func() time.Time {
+	return time.Now().UTC()
+}
 
 // LogWriter returns a new Logger.
 func LogWriter(out io.Writer, dir string) Logger {

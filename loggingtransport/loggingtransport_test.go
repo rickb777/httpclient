@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/onsi/gomega"
 	"github.com/rickb777/httpclient/logging"
@@ -23,6 +24,7 @@ func TestLoggingClient_200_OK_WithHeadersAndBodies(t *testing.T) {
 	var lvl logging.Level
 	for lvl = logging.Discrete; lvl <= logging.WithHeadersAndBodies; lvl++ {
 		info := lvl.String()
+		logging.Now = stubbedTime()
 		req := httptest.NewRequest("POST", target, strings.NewReader(input))
 		testClient := testhttpclient.New(t).AddLiteralResponse("POST", target,
 			`HTTP/1.1 200 OK
@@ -42,7 +44,8 @@ Content-Length: 18
 			}
 			g.Expect(item.StatusCode).To(gomega.Equal(http.StatusOK), info)
 			g.Expect(item.Err).NotTo(gomega.HaveOccurred(), info)
-			g.Expect(item.Duration).To(gomega.BeNumerically(">", 0), info)
+			g.Expect(item.Start).To(gomega.Equal(t0.Add(time.Second)), info)
+			g.Expect(item.Duration).To(gomega.Equal(time.Second), info)
 			g.Expect(item.Level).To(gomega.Equal(lvl), info)
 		}
 
@@ -122,4 +125,14 @@ func TestLoggingClient_error(t *testing.T) {
 	g.Expect(err).To(gomega.HaveOccurred())
 	g.Expect(err.Error()).To(gomega.Equal("Kaboom!"))
 	g.Expect(logged).To(gomega.BeTrue())
+}
+
+var t0 = time.Date(2021, 04, 01, 10, 0, 0, 0, time.UTC)
+
+func stubbedTime() func() time.Time {
+	t := t0
+	return func() time.Time {
+		t = t.Add(time.Second)
+		return t
+	}
 }
