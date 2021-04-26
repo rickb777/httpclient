@@ -70,12 +70,12 @@ func TestLogWriter_typical_GET_JSON(t *testing.T) {
 
 	g.Expect(buf.String()).To(gomega.Equal(
 		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
---> Accept:         application/json
---> Cookie:         a=123
--->                 b=4556
+--> Accept:          application/json
+--> Cookie:          a=123
+-->                  b=4556
 
-<-- Content-Length: 18
-<-- Content-Type:   application/json; charset=UTF-8
+<-- Content-Length:  18
+<-- Content-Type:    application/json; charset=UTF-8
 
 {"A":"foo","B":7}
 
@@ -114,10 +114,10 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 
 	g.Expect(buf.String()).To(gomega.Equal(
 		`GET      http://somewhere.com/a/b/c 200 1ms
---> Accept:         application/*
+--> Accept:          application/*
 
-<-- Content-Length: 3
-<-- Content-Type:   application/octet-stream
+<-- Content-Length:  3
+<-- Content-Type:    application/octet-stream
 <-- binary content [3]byte
 
 ---
@@ -148,8 +148,8 @@ func TestLogWriter_typical_PUT(t *testing.T) {
 
 	g.Expect(buf.String()).To(gomega.Equal(
 		`PUT      http://somewhere.com/a/b/c 204 1ms
---> Content-Length: 18
---> Content-Type:   application/json; charset=UTF-8
+--> Content-Length:  18
+--> Content-Type:    application/json; charset=UTF-8
 
 {"A":"foo","B":7}
 

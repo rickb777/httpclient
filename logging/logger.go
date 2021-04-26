@@ -3,6 +3,7 @@ package logging
 import (
 	"bytes"
 	"fmt"
+	"github.com/rickb777/httpclient"
 	"io"
 	"net/http"
 	"sort"
@@ -53,7 +54,9 @@ func printPart(out io.Writer, hdrs http.Header, prefix string, body []byte) {
 	if IsTextual(hdrs.Get("Content-Type")) {
 		if len(body) > 0 {
 			fmt.Fprintln(out)
-			io.Copy(out, bytes.NewBuffer(body))
+			fn := &httpclient.WithFinalNewline{W: out}
+			io.Copy(fn, bytes.NewBuffer(body))
+			fn.EnsureFinalNewline()
 		}
 	} else if len(body) > 0 {
 		fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
@@ -75,9 +78,9 @@ func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
 	for _, k := range keys {
 		vs := hdrs[k]
 		k += ":"
-		fmt.Fprintf(out, "%s %-15s %s\n", prefix, k, vs[0])
+		fmt.Fprintf(out, "%s %-16s %s\n", prefix, k, vs[0])
 		for _, v := range vs[1:] {
-			fmt.Fprintf(out, "%s                 %s\n", prefix, v)
+			fmt.Fprintf(out, "%s                  %s\n", prefix, v)
 		}
 	}
 }
