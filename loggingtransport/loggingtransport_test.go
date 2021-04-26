@@ -108,7 +108,7 @@ func TestLoggingClient_error(t *testing.T) {
 	logger := func(item *logging.LogItem) {
 		logged = true
 		g.Expect(item.Method).To(gomega.Equal(req.Method))
-		g.Expect(item.URL).To(gomega.Equal(target))
+		g.Expect(item.URL).To(gomega.Equal(req.URL))
 		g.Expect(item.Request.Body).To(gomega.HaveLen(0))
 		g.Expect(item.Response.Body).To(gomega.HaveLen(0))
 		g.Expect(item.Err).To(gomega.HaveOccurred())
