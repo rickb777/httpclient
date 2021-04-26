@@ -62,13 +62,45 @@ func LogWriter(out io.Writer, dir string) Logger {
 
 		case WithHeadersAndBodies:
 			file := fmt.Sprintf("%s%s_%s_%s", dir, item.Start.Format("2006-01-02_15-04-05"),
-				item.Method, strings.ReplaceAll(item.URL.Path[1:], "/", "-"))
+				item.Method, urlToFilename(item.URL.Path))
 			printPart(out, item.Request.Header, true, file, item.Request.Body)
 			fmt.Fprintln(out)
 			printPart(out, item.Response.Header, false, file, item.Response.Body)
 			fmt.Fprintln(out, "\n---")
 		}
 	}
+}
+
+func urlToFilename(path string) string {
+	p := path
+	if p == "" {
+		return ""
+	}
+	return removePunctuation(p[1:])
+}
+
+func removePunctuation(s string) string {
+	buf := &strings.Builder{}
+	dash := false
+	for _, c := range s {
+		if 'A' <= c && c <= 'Z' {
+			buf.WriteRune(c)
+			dash = false
+		} else if 'a' <= c && c <= 'z' {
+			buf.WriteRune(c)
+			dash = false
+		} else if '0' <= c && c <= '9' {
+			buf.WriteRune(c)
+			dash = false
+		} else if c == '/' {
+			buf.WriteByte('_')
+			dash = false
+		} else if !dash {
+			buf.WriteByte('-')
+			dash = true
+		}
+	}
+	return buf.String()
 }
 
 func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, body []byte) {

@@ -125,7 +125,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-see ./2021-04-01_10-11-12_GET_a-b-c_res.json
+see ./2021-04-01_10-11-12_GET_a_b_c_res.json
 
 ---
 `), buf.String())
@@ -175,7 +175,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 
 <-- Content-Length:  18
 <-- Content-Type:    application/xml; charset=UTF-8
-see ./2021-04-01_10-11-12_GET_a-b-c_res.xml
+see ./2021-04-01_10-11-12_GET_a_b_c_res.xml
 
 ---
 `), buf.String())
@@ -255,4 +255,19 @@ func TestLogWriter_typical_PUT(t *testing.T) {
 
 ---
 `), buf.String())
+}
+
+func TestUrlToFilename(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	cases := map[string]string{
+		"":             "",
+		"/":            "",
+		"/aaa/bbb/ccc": "aaa_bbb_ccc",
+		`/A!B"C#D$E%F&G'H(I)J*K+L,/a:b;c<d=e>f&g[h\i]j^k` + "`/A{B|C}D~": "A-B-C-D-E-F-G-H-I-J-K-L-_a-b-c-d-e-f-g-h-i-j-k-_A-B-C-D-",
+	}
+	for in, exp := range cases {
+		act := urlToFilename(in)
+		g.Expect(act).To(gomega.Equal(exp))
+	}
 }
