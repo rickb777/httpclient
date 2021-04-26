@@ -3,7 +3,6 @@ package loggingclient
 import (
 	"bytes"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -32,8 +31,9 @@ Content-Length: 18
 
 {"A":"foo","B":7}
 `)
-
+		logged := false
 		logger := func(item *logging.LogItem) {
+			logged = true
 			g.Expect(item.Method).To(gomega.Equal(req.Method), info)
 			g.Expect(item.URL).To(gomega.Equal(req.URL), info)
 			if lvl == logging.WithHeadersAndBodies {
@@ -51,11 +51,12 @@ Content-Length: 18
 
 		g.Expect(err).NotTo(gomega.HaveOccurred(), info)
 		g.Expect(res.StatusCode).To(gomega.Equal(http.StatusOK), info)
+		g.Expect(logged).To(gomega.BeTrue(), info)
 		buf := &bytes.Buffer{}
-		io.Copy(buf, req.Body)
+		buf.ReadFrom(req.Body)
 		g.Expect(buf.String()).To(gomega.Equal(input), info)
 		buf.Reset()
-		io.Copy(buf, res.Body)
+		buf.ReadFrom(res.Body)
 		g.Expect(buf.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
 	}
 }
@@ -82,13 +83,16 @@ Content-Length: 18
 {"A":"foo","B":7}
 `)
 
+		logged := false
 		logger := func(item *logging.LogItem) {
+			logged = true
 			u, _ := url.Parse(expected)
 			g.Expect(item.URL).To(gomega.Equal(u))
 		}
 
 		client := New(testClient, logger, lvl)
 		_, _ = client.Do(req)
+		g.Expect(logged).To(gomega.BeTrue())
 	}
 }
 
@@ -100,9 +104,11 @@ func TestLoggingClient_error(t *testing.T) {
 	theError := errors.New("Kaboom!")
 	testClient := testhttpclient.New(t).AddError("GET", target, theError)
 
+	logged := false
 	logger := func(item *logging.LogItem) {
+		logged = true
 		g.Expect(item.Method).To(gomega.Equal(req.Method))
-		g.Expect(item.URL).To(gomega.Equal(req.URL))
+		g.Expect(item.URL).To(gomega.Equal(target))
 		g.Expect(item.Request.Body).To(gomega.HaveLen(0))
 		g.Expect(item.Response.Body).To(gomega.HaveLen(0))
 		g.Expect(item.Err).To(gomega.HaveOccurred())
@@ -110,9 +116,10 @@ func TestLoggingClient_error(t *testing.T) {
 		g.Expect(item.Duration).To(gomega.BeNumerically(">", 0))
 	}
 
-	client := New(testClient, logger, 0)
+	client := New(testClient, logger, logging.Summary)
 	_, err := client.Do(req)
 
 	g.Expect(err).To(gomega.HaveOccurred())
 	g.Expect(err.Error()).To(gomega.Equal("Kaboom!"))
+	g.Expect(logged).To(gomega.BeTrue())
 }

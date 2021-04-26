@@ -199,8 +199,9 @@ func prettyPrinterFactory(extension string) transcoder {
 	}
 
 	return func(out io.Writer, body []byte) error {
+		fmt.Fprintln(out)
 		fn := &httpclient.WithFinalNewline{W: out}
-		_, err := io.Copy(fn, bytes.NewBuffer(body))
+		_, err := bytes.NewBuffer(body).WriteTo(out)
 		fn.EnsureFinalNewline()
 		return err
 	}
