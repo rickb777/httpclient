@@ -16,3 +16,6 @@
 
 .idea/
 .vscode/
+
+logging/2*.json
+logging/2*.xml

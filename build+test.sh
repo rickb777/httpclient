@@ -17,3 +17,6 @@ go vet ./...
 
 #echo "go install ./cmd/..."
 #go install ./cmd/...
+
+# remove test output files
+rm -f logging/2*.json logging/2*.xml

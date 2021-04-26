@@ -2,14 +2,23 @@ package logging
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/go-xmlfmt/xmlfmt"
 	"github.com/rickb777/httpclient"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"sort"
 	"strings"
 	"time"
 )
+
+// LongBodyThreshold is the body length threshold beyond which the body
+// will be written to a text file (when the content is text). Otherwise
+// it is written inline in the log.
+var LongBodyThreshold = 100
 
 type LogContent struct {
 	Header http.Header
@@ -18,11 +27,12 @@ type LogContent struct {
 
 type LogItem struct {
 	Method     string
-	URL        string
+	URL        *url.URL
 	StatusCode int
 	Request    LogContent
 	Response   LogContent
 	Err        error
+	Start      time.Time
 	Duration   time.Duration
 	Level      Level
 }
@@ -30,7 +40,10 @@ type LogItem struct {
 type Logger func(item *LogItem)
 
 // LogWriter returns a new Logger.
-func LogWriter(out io.Writer) Logger {
+func LogWriter(out io.Writer, dir string) Logger {
+	if dir != "" && !strings.HasSuffix(dir, "/") {
+		dir = dir + "/"
+	}
 	return func(item *LogItem) {
 		// basic info
 		fmt.Fprintf(out, "%-8s %s %d %s", item.Method, item.URL, item.StatusCode, item.Duration.Round(100*time.Microsecond))
@@ -40,27 +53,78 @@ func LogWriter(out io.Writer) Logger {
 		fmt.Fprintln(out)
 
 		// verbose info
-		if item.Level >= WithHeaders {
-			printPart(out, item.Request.Header, "-->", item.Request.Body)
+		switch item.Level {
+		case WithHeaders:
+			printPart(out, item.Request.Header, true, "", nil)
 			fmt.Fprintln(out)
-			printPart(out, item.Response.Header, "<--", item.Response.Body)
+			printPart(out, item.Response.Header, false, "", nil)
+			fmt.Fprintln(out, "\n---")
+
+		case WithHeadersAndBodies:
+			file := fmt.Sprintf("%s%s_%s_%s", dir, item.Start.Format("2006-01-02_15-04-05"),
+				item.Method, strings.ReplaceAll(item.URL.Path[1:], "/", "-"))
+			printPart(out, item.Request.Header, true, file, item.Request.Body)
+			fmt.Fprintln(out)
+			printPart(out, item.Response.Header, false, file, item.Response.Body)
 			fmt.Fprintln(out, "\n---")
 		}
 	}
 }
 
-func printPart(out io.Writer, hdrs http.Header, prefix string, body []byte) {
+func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, body []byte) {
+	prefix := ternary(isRequest, "-->", "<--")
 	printHeaders(out, hdrs, prefix)
-	if IsTextual(hdrs.Get("Content-Type")) {
-		if len(body) > 0 {
-			fmt.Fprintln(out)
-			fn := &httpclient.WithFinalNewline{W: out}
-			io.Copy(fn, bytes.NewBuffer(body))
-			fn.EnsureFinalNewline()
+	contentType := hdrs.Get("Content-Type")
+	if len(body) > 0 {
+		if IsTextual(contentType) {
+			saveBodyToFile(out, isRequest, contentType, file, body)
+		} else {
+			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
-	} else if len(body) > 0 {
-		fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 	}
+}
+
+func saveBodyToFile(out io.Writer, isRequest bool, contentType string, file string, body []byte) {
+	suffix := ternary(isRequest, "req", "res")
+	name := fmt.Sprintf("%s_%s", file, suffix)
+	cts := strings.SplitN(contentType, ";", 2)
+	if len(body) > LongBodyThreshold {
+		switch strings.ToLower(cts[0]) {
+		case "application/json":
+			writeBodyToFile(out, name, ".json", body)
+		case "application/xml":
+			writeBodyToFile(out, name, ".xml", body)
+		default:
+			writeBodyToFile(out, name, ".txt", body)
+		}
+	} else {
+		// write short body inline
+		fmt.Fprintln(out)
+		fn := &httpclient.WithFinalNewline{W: out}
+		io.Copy(fn, bytes.NewBuffer(body))
+		fn.EnsureFinalNewline()
+	}
+}
+
+func writeBodyToFile(out io.Writer, name, extn string, body []byte) {
+	f, err := os.Create(name + extn)
+	if err != nil {
+		fmt.Fprintf(out, "logger open file error: %s\n", err)
+		return
+	}
+
+	err = prettyPrinterFactory(extn)(f, body)
+	if err != nil {
+		fmt.Fprintf(out, "logger transcode error: %s\n", err)
+		return
+	}
+
+	err = f.Close()
+	if err != nil {
+		fmt.Fprintf(out, "logger close error: %s\n", err)
+	}
+
+	fmt.Fprintf(out, "see %s%s\n", name, extn)
 }
 
 func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
@@ -112,4 +176,61 @@ func IsTextual(contentType string) bool {
 	}
 
 	return false
+}
+
+func ternary(predicate bool, yes, no string) string {
+	if predicate {
+		return yes
+	}
+	return no
+}
+
+//-------------------------------------------------------------------------------------------------
+// pretty printing via transcoding: implemented for JSON and XML only
+
+type transcoder func(out io.Writer, body []byte) error
+
+func prettyPrinterFactory(extension string) transcoder {
+	switch extension {
+	case ".json":
+		return jsonTranscoder
+	case ".xml":
+		return xmlTranscoder
+	}
+
+	return func(out io.Writer, body []byte) error {
+		fn := &httpclient.WithFinalNewline{W: out}
+		_, err := io.Copy(fn, bytes.NewBuffer(body))
+		fn.EnsureFinalNewline()
+		return err
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+func jsonTranscoder(out io.Writer, body []byte) error {
+	var data interface{}
+	err := json.NewDecoder(bytes.NewReader(body)).Decode(&data)
+	if err != nil {
+		return err
+	}
+
+	enc := json.NewEncoder(out)
+	enc.SetIndent("", "  ")
+	return enc.Encode(data)
+}
+
+//-------------------------------------------------------------------------------------------------
+
+func xmlTranscoder(out io.Writer, body []byte) error {
+	xml := xmlfmt.FormatXML(string(body), "", "    ")
+	if strings.HasPrefix(xml, xmlfmt.NL) {
+		xml = xml[len(xmlfmt.NL):]
+	}
+	_, err := fmt.Fprintln(out, xml)
+	return err
+}
+
+func init() {
+	xmlfmt.NL = "\n"
 }

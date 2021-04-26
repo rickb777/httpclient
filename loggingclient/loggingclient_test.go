@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -34,7 +35,7 @@ Content-Length: 18
 
 		logger := func(item *logging.LogItem) {
 			g.Expect(item.Method).To(gomega.Equal(req.Method), info)
-			g.Expect(item.URL).To(gomega.Equal(req.URL.String()), info)
+			g.Expect(item.URL).To(gomega.Equal(req.URL), info)
 			if lvl == logging.WithHeadersAndBodies {
 				g.Expect(string(item.Request.Body)).To(gomega.Equal(input), info)
 				g.Expect(string(item.Response.Body)).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
@@ -82,7 +83,8 @@ Content-Length: 18
 `)
 
 		logger := func(item *logging.LogItem) {
-			g.Expect(item.URL).To(gomega.Equal(expected))
+			u, _ := url.Parse(expected)
+			g.Expect(item.URL).To(gomega.Equal(u))
 		}
 
 		client := New(testClient, logger, lvl)

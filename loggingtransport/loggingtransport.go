@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/rickb777/httpclient/logging"
@@ -50,13 +49,14 @@ func (lt *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error)
 func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error) {
 	item := &logging.LogItem{
 		Method: req.Method,
-		URL:    req.URL.String(),
+		URL:    req.URL,
 		Level:  lt.level,
 	}
 
 	if lt.level <= logging.Discrete {
-		parts := strings.SplitN(item.URL, "?", 2)
-		item.URL = parts[0]
+		u2 := *req.URL
+		u2.RawQuery = ""
+		item.URL = &u2
 	}
 
 	item.Request.Header = req.Header
