@@ -15,6 +15,42 @@ import (
 	"github.com/rickb777/httpclient/testhttpclient"
 )
 
+func TestLoggingClient_200_OK_Off(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	input := "Sunny day outside"
+	target := "http://somewhere.com/a/b/c"
+
+	lvl := logging.Off
+	info := lvl.String()
+	logging.Now = stubbedTime()
+	req := httptest.NewRequest("POST", target, strings.NewReader(input))
+	testClient := testhttpclient.New(t).AddLiteralResponse("POST", target,
+		`HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Content-Length: 18
+
+{"A":"foo","B":7}
+`)
+	logged := false
+	logger := func(item *logging.LogItem) {
+		logged = true
+	}
+
+	client := New(testClient, logger, lvl)
+	res, err := client.RoundTrip(req)
+
+	g.Expect(err).NotTo(gomega.HaveOccurred(), info)
+	g.Expect(res.StatusCode).To(gomega.Equal(http.StatusOK), info)
+	g.Expect(logged).To(gomega.BeFalse(), info)
+	buf := &bytes.Buffer{}
+	buf.ReadFrom(req.Body)
+	g.Expect(buf.String()).To(gomega.Equal(input), info)
+	buf.Reset()
+	buf.ReadFrom(res.Body)
+	g.Expect(buf.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
+}
+
 func TestLoggingClient_200_OK_WithHeadersAndBodies(t *testing.T) {
 	g := gomega.NewWithT(t)
 

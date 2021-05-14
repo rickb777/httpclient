@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"github.com/go-xmlfmt/xmlfmt"
 	"github.com/rickb777/httpclient"
+	"github.com/spf13/afero"
 	"io"
+	"mime"
 	"net/http"
-	"net/url"
-	"os"
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // LongBodyThreshold is the body length threshold beyond which the body
@@ -20,27 +21,12 @@ import (
 // it is written inline in the log.
 var LongBodyThreshold = 100
 
-type LogContent struct {
-	Header http.Header
-	Body   []byte
-}
-
-// LogItem records information about one HTTP round-trip.
-type LogItem struct {
-	Method     string
-	URL        *url.URL
-	StatusCode int
-	Request    LogContent
-	Response   LogContent
-	Err        error
-	Start      time.Time
-	Duration   time.Duration
-	Level      Level
-}
-
 // Logger is a function that processes log items, usually by writing them
 // to a log file.
 type Logger func(item *LogItem)
+
+// Fs provides the filesystem. It can be stubbed for testing.
+var Fs = afero.NewOsFs()
 
 // Now provides the current time. It can be stubbed for testing.
 var Now = func() time.Time {
@@ -91,21 +77,22 @@ func removePunctuation(s string) string {
 	buf := &strings.Builder{}
 	dash := false
 	for _, c := range s {
-		if 'A' <= c && c <= 'Z' {
+		switch c {
+		case '_', '.':
 			buf.WriteRune(c)
 			dash = false
-		} else if 'a' <= c && c <= 'z' {
-			buf.WriteRune(c)
+		case '/':
+			buf.WriteRune('_')
 			dash = false
-		} else if '0' <= c && c <= '9' {
-			buf.WriteRune(c)
-			dash = false
-		} else if c == '/' {
-			buf.WriteByte('_')
-			dash = false
-		} else if !dash {
-			buf.WriteByte('-')
-			dash = true
+
+		default:
+			if unicode.IsLetter(c) || unicode.IsDigit(c) {
+				buf.WriteRune(c)
+				dash = false
+			} else if !dash {
+				buf.WriteByte('-')
+				dash = true
+			}
 		}
 	}
 	return buf.String()
@@ -129,12 +116,11 @@ func saveBodyToFile(out io.Writer, isRequest bool, contentType string, file stri
 	name := fmt.Sprintf("%s_%s", file, suffix)
 	cts := strings.SplitN(contentType, ";", 2)
 	if len(body) > LongBodyThreshold {
-		switch strings.ToLower(cts[0]) {
-		case "application/json":
-			writeBodyToFile(out, name, ".json", body)
-		case "application/xml":
-			writeBodyToFile(out, name, ".xml", body)
-		default:
+		ctl := strings.ToLower(cts[0])
+		exts, _ := mime.ExtensionsByType(ctl)
+		if len(exts) > 0 {
+			writeBodyToFile(out, name, exts[0], body)
+		} else {
 			writeBodyToFile(out, name, ".txt", body)
 		}
 	} else {
@@ -147,7 +133,7 @@ func saveBodyToFile(out io.Writer, isRequest bool, contentType string, file stri
 }
 
 func writeBodyToFile(out io.Writer, name, extn string, body []byte) {
-	f, err := os.Create(name + extn)
+	f, err := Fs.Create(name + extn)
 	if err != nil {
 		fmt.Fprintf(out, "logger open file error: %s\n", err)
 		return
@@ -237,14 +223,14 @@ func prettyPrinterFactory(extension string) transcoder {
 	case ".xml":
 		return xmlTranscoder
 	}
+	return writePlainText
+}
 
-	return func(out io.Writer, body []byte) error {
-		fmt.Fprintln(out)
-		fn := &httpclient.WithFinalNewline{W: out}
-		_, err := bytes.NewBuffer(body).WriteTo(out)
-		fn.EnsureFinalNewline()
-		return err
-	}
+func writePlainText(out io.Writer, body []byte) error {
+	fn := &httpclient.WithFinalNewline{W: out}
+	_, err := bytes.NewBuffer(body).WriteTo(fn)
+	fn.EnsureFinalNewline()
+	return err
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -253,7 +239,7 @@ func jsonTranscoder(out io.Writer, body []byte) error {
 	var data interface{}
 	err := json.NewDecoder(bytes.NewReader(body)).Decode(&data)
 	if err != nil {
-		return err
+		return writePlainText(out, body)
 	}
 
 	enc := json.NewEncoder(out)

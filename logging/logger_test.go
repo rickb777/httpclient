@@ -131,6 +131,55 @@ see ./2021-04-01_10-11-12_GET_a_b_c_res.json
 `), buf.String())
 }
 
+func TestLogWriter_typical_GET_Text_long_content(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
+	reqHeader := make(http.Header)
+	reqHeader.Set("Accept", "text/*")
+	reqHeader.Set("Cookie", "a=123")
+	reqHeader.Add("Cookie", "b=4556")
+
+	resHeader := make(http.Header)
+	resHeader.Set("Content-Type", "text/plain; charset=UTF-8")
+	resHeader.Set("Content-Length", "18")
+
+	buf := &bytes.Buffer{}
+	log := LogWriter(buf, ".")
+	log(&LogItem{
+		Method:     "GET",
+		URL:        u,
+		StatusCode: 200,
+		Request: LogContent{
+			Header: reqHeader,
+		},
+		Response: LogContent{
+			Header: resHeader,
+			Body: []byte("So shaken as we are, so wan with care\n" +
+				"Find we a time for frighted peace to pant\n" +
+				"And breathe short-winded accents of new broils\n" +
+				"To be commenced in strands afar remote.\n"),
+		},
+		Err:      nil,
+		Start:    time.Date(2021, 04, 01, 10, 11, 12, 0, time.UTC),
+		Duration: time.Millisecond,
+		Level:    WithHeadersAndBodies,
+	})
+
+	g.Expect(buf.String()).To(gomega.Equal(
+		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
+--> Accept:          text/*
+--> Cookie:          a=123
+-->                  b=4556
+
+<-- Content-Length:  18
+<-- Content-Type:    text/plain; charset=UTF-8
+see ./2021-04-01_10-11-12_GET_a_b_c_res.asc
+
+---
+`), buf.String())
+}
+
 func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	g := gomega.NewWithT(t)
 

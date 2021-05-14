@@ -5,6 +5,7 @@ import (
 	"github.com/rickb777/httpclient/logging"
 	"io"
 	"net/http"
+	"sync"
 )
 
 // LoggingTransport is a http.RoundTripper with a pluggable logger.
@@ -12,6 +13,7 @@ type LoggingTransport struct {
 	upstream http.RoundTripper
 	log      logging.Logger
 	level    logging.Level
+	mu       sync.RWMutex
 }
 
 // Wrap a client and logs all requests made to it.
@@ -34,24 +36,26 @@ func New(upstream http.RoundTripper, logger logging.Logger, level logging.Level)
 		upstream: upstream,
 		log:      logger,
 		level:    level,
+		mu:       sync.RWMutex{},
 	}
 }
 
 func (lt *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if lt.level == logging.Off {
+	level := lt.getLevel()
+	if level == logging.Off {
 		return lt.upstream.RoundTrip(req)
 	}
-	return lt.loggingDo(req)
+	return lt.loggingDo(req, level)
 }
 
-func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error) {
+func (lt *LoggingTransport) loggingDo(req *http.Request, level logging.Level) (*http.Response, error) {
 	item := &logging.LogItem{
 		Method: req.Method,
 		URL:    req.URL,
-		Level:  lt.level,
+		Level:  level,
 	}
 
-	if lt.level <= logging.Discrete {
+	if level <= logging.Discrete {
 		u2 := *req.URL
 		u2.RawQuery = ""
 		item.URL = &u2
@@ -59,7 +63,7 @@ func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error)
 
 	item.Request.Header = req.Header
 
-	if lt.level == logging.WithHeadersAndBodies {
+	if level == logging.WithHeadersAndBodies {
 		if req.Body != nil && req.Body != http.NoBody {
 			buf, _ := readIntoBuffer(req.Body)
 			item.Request.Body = buf.Bytes()
@@ -91,11 +95,11 @@ func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error)
 		return res, err
 	}
 
-	if lt.level >= logging.WithHeaders {
+	if level >= logging.WithHeaders {
 		item.Response.Header = res.Header
 	}
 
-	if lt.level == logging.WithHeadersAndBodies {
+	if level == logging.WithHeadersAndBodies {
 		item.Response.Body, err = captureBytes(res.Body)
 		if err != nil {
 			return nil, err
@@ -105,6 +109,21 @@ func (lt *LoggingTransport) loggingDo(req *http.Request) (*http.Response, error)
 
 	lt.log(item)
 	return res, err
+}
+
+func (lt *LoggingTransport) getLevel() logging.Level {
+	lt.mu.RLock()
+	defer lt.mu.RUnlock()
+	l := lt.level
+	return l
+}
+
+// SetLevel alters the logging level. This can be called concurrently
+// from any goroutine.
+func (lt *LoggingTransport) SetLevel(newLevel logging.Level) {
+	lt.mu.Lock()
+	defer lt.mu.Unlock()
+	lt.level = newLevel
 }
 
 func captureBytes(in io.ReadCloser) ([]byte, error) {

@@ -14,7 +14,9 @@ type WithFinalNewline struct {
 func (d *WithFinalNewline) Write(p []byte) (n int, err error) {
 	if len(p) > 0 {
 		n, err = d.W.Write(p)
-		d.hasNewline = p[len(p)-1] == '\n'
+		if n > 0 {
+			d.hasNewline = p[n-1] == '\n'
+		}
 	}
 	return n, err
 }
