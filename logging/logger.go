@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"unicode"
 )
 
 // LongBodyThreshold is the body length threshold beyond which the body
@@ -55,8 +54,8 @@ func LogWriter(out io.Writer, dir string) Logger {
 			fmt.Fprintln(out, "\n---")
 
 		case WithHeadersAndBodies:
-			file := fmt.Sprintf("%s%s_%s_%s", dir, item.Start.Format("2006-01-02_15-04-05"),
-				item.Method, urlToFilename(item.URL.Path))
+			tstamp := item.Start.Format("2006-01-02_15-04-05")
+			file := fmt.Sprintf("%s%s_%s_%s", dir, tstamp, item.Method, urlToFilename(item.URL.Path))
 			printPart(out, item.Request.Header, true, file, item.Request.Body)
 			fmt.Fprintln(out)
 			printPart(out, item.Response.Header, false, file, item.Response.Body)
@@ -65,71 +64,55 @@ func LogWriter(out io.Writer, dir string) Logger {
 	}
 }
 
-func urlToFilename(path string) string {
-	p := path
-	if p == "" {
-		return ""
-	}
-	return removePunctuation(p[1:])
-}
-
-func removePunctuation(s string) string {
-	buf := &strings.Builder{}
-	dash := false
-	for _, c := range s {
-		switch c {
-		case '_', '.':
-			buf.WriteRune(c)
-			dash = false
-		case '/':
-			buf.WriteRune('_')
-			dash = false
-
-		default:
-			if unicode.IsLetter(c) || unicode.IsDigit(c) {
-				buf.WriteRune(c)
-				dash = false
-			} else if !dash {
-				buf.WriteByte('-')
-				dash = true
-			}
-		}
-	}
-	return buf.String()
-}
-
 func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, body []byte) {
 	prefix := ternary(isRequest, "-->", "<--")
 	printHeaders(out, hdrs, prefix)
 	contentType := hdrs.Get("Content-Type")
-	if len(body) > 0 {
-		if IsTextual(contentType) {
-			saveBodyToFile(out, isRequest, contentType, file, body)
+	if len(body) == 0 {
+		return
+	}
+
+	suffix := ternary(isRequest, "req", "resp")
+	name := fmt.Sprintf("%s_%s", file, suffix)
+	justType := strings.SplitN(contentType, ";", 2)[0]
+	if len(body) > LongBodyThreshold {
+		extn := fileExtension(justType)
+		if extn != "" {
+			writeBodyToFile(out, name, extn, body)
 		} else {
 			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
-	}
-}
 
-func saveBodyToFile(out io.Writer, isRequest bool, contentType string, file string, body []byte) {
-	suffix := ternary(isRequest, "req", "res")
-	name := fmt.Sprintf("%s_%s", file, suffix)
-	cts := strings.SplitN(contentType, ";", 2)
-	if len(body) > LongBodyThreshold {
-		ctl := strings.ToLower(cts[0])
-		exts, _ := mime.ExtensionsByType(ctl)
-		if len(exts) > 0 {
-			writeBodyToFile(out, name, exts[0], body)
-		} else {
-			writeBodyToFile(out, name, ".txt", body)
-		}
-	} else {
+	} else if IsTextual(justType) {
 		// write short body inline
 		fmt.Fprintln(out)
 		fn := &httpclient.WithFinalNewline{W: out}
 		io.Copy(fn, bytes.NewBuffer(body))
 		fn.EnsureFinalNewline()
+
+	} else {
+		fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 	}
+}
+
+func fileExtension(mimeType string) string {
+	ctl := strings.ToLower(mimeType)
+
+	// two special cases to ensure consistency across platforms
+	// because the ordering of MIME type mappings is not predictable
+	switch ctl {
+	case "text/plain":
+		return ".txt"
+	case "application/octet-stream":
+		return ".bin"
+	}
+
+	exts, _ := mime.ExtensionsByType(ctl)
+	if len(exts) > 0 {
+		return exts[0]
+	}
+
+	return ""
 }
 
 func writeBodyToFile(out io.Writer, name, extn string, body []byte) {
