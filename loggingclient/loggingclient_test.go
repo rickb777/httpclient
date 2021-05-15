@@ -135,6 +135,47 @@ Content-Length: 18
 	}
 }
 
+func TestLoggingClient_200_OK_variable(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	target := "http://somewhere.com/a/b/c"
+	req := httptest.NewRequest("GET", target, nil)
+
+	cases := map[logging.Level]int{}
+
+	response := `HTTP/1.1 200 OK
+Content-Type: application/json; charset=UTF-8
+Content-Length: 18
+
+{"A":"foo","B":7}
+`
+	testClient := testhttpclient.New(t).
+		AddLiteralResponse("GET", target, response).
+		AddLiteralResponse("GET", target, response).
+		AddLiteralResponse("GET", target, response)
+
+	logger := func(item *logging.LogItem) {
+		cases[item.Level]++
+	}
+
+	vf := logging.NewVariableFilter(logging.Off)
+	client := NewWithFilter(testClient, logger, vf)
+
+	_, _ = client.Do(req)
+
+	vf.SetLevel(logging.FixedLevel(logging.Discrete))
+
+	_, _ = client.Do(req)
+
+	vf.SetLevel(logging.FixedLevel(logging.Summary))
+
+	_, _ = client.Do(req)
+
+	g.Expect(cases[logging.Off]).To(gomega.Equal(0))
+	g.Expect(cases[logging.Discrete]).To(gomega.Equal(1))
+	g.Expect(cases[logging.Summary]).To(gomega.Equal(1))
+}
+
 func TestLoggingClient_error(t *testing.T) {
 	g := gomega.NewWithT(t)
 

@@ -3,7 +3,7 @@ package logging
 // see github.com/rickb777/enumeration/v2
 //go:generate enumeration -type Level
 
-// Level allows control of the level of detail in log messages.
+// Level allows control of the predicate of detail in log messages.
 type Level int
 
 const (
