@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/logging"
 	"io"
 	"net/http"
@@ -24,17 +25,15 @@ func PrepareTheLogItem(req *http.Request, level logging.Level) *logging.LogItem 
 
 	if level == logging.WithHeadersAndBodies {
 		if req.Body != nil && req.Body != http.NoBody {
-			buf, _ := readIntoBuffer(req.Body)
-			item.Request.Body = buf.Bytes()
-			req.Body = io.NopCloser(bytes.NewBuffer(item.Request.Body))
+			item.Request.Body, _ = body.CopyBody(req.Body)
+			req.Body = item.Request.Body
 			req.GetBody = func() (io.ReadCloser, error) {
-				return io.NopCloser(bytes.NewBuffer(item.Request.Body)), nil
+				return item.Request.Body, nil
 			}
 
 		} else if req.GetBody != nil {
 			rdr, _ := req.GetBody()
-			buf, _ := readIntoBuffer(rdr)
-			item.Request.Body = buf.Bytes()
+			item.Request.Body, _ = body.CopyBody(rdr)
 		}
 	}
 
@@ -64,25 +63,16 @@ func CompleteTheLoggging(res *http.Response, err error, item *logging.LogItem, l
 	}
 
 	if level == logging.WithHeadersAndBodies {
-		item.Response.Body, err = captureBytes(res.Body)
+		item.Response.Body, err = body.CopyBody(res.Body)
 		if err != nil {
 			log(item)
 			return nil, err
 		}
-		res.Body = io.NopCloser(bytes.NewBuffer(item.Response.Body))
+		res.Body = item.Response.Body
 	}
 
 	log(item)
 	return res, nil
-}
-
-func captureBytes(in io.ReadCloser) ([]byte, error) {
-	defer in.Close()
-	buf, err := readIntoBuffer(in)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
 }
 
 func readIntoBuffer(in io.Reader) (*bytes.Buffer, error) {

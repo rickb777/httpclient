@@ -75,8 +75,8 @@ Content-Length: 18
 			g.Expect(item.Method).To(gomega.Equal(req.Method), info)
 			g.Expect(item.URL).To(gomega.Equal(req.URL), info)
 			if lvl == logging.WithHeadersAndBodies {
-				g.Expect(string(item.Request.Body)).To(gomega.Equal(input), info)
-				g.Expect(string(item.Response.Body)).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
+				g.Expect(item.Request.Body.String()).To(gomega.Equal(input), info)
+				g.Expect(item.Response.Body.String()).To(gomega.Equal(`{"A":"foo","B":7}`+"\n"), info)
 			}
 			g.Expect(item.StatusCode).To(gomega.Equal(http.StatusOK), info)
 			g.Expect(item.Err).NotTo(gomega.HaveOccurred(), info)
@@ -189,8 +189,8 @@ func TestLoggingClient_error(t *testing.T) {
 		logged = true
 		g.Expect(item.Method).To(gomega.Equal(req.Method))
 		g.Expect(item.URL).To(gomega.Equal(req.URL))
-		g.Expect(item.Request.Body).To(gomega.HaveLen(0))
-		g.Expect(item.Response.Body).To(gomega.HaveLen(0))
+		g.Expect(item.Request.Body.Bytes()).To(gomega.HaveLen(0))
+		g.Expect(item.Response.Body.Bytes()).To(gomega.HaveLen(0))
 		g.Expect(item.Err).To(gomega.HaveOccurred())
 		g.Expect(item.Err.Error()).To(gomega.Equal("Kaboom!"))
 		g.Expect(item.Duration).To(gomega.BeNumerically(">", 0))

@@ -3,6 +3,7 @@ package logging
 import (
 	"bytes"
 	"github.com/onsi/gomega"
+	"github.com/rickb777/httpclient/body"
 	"net/http"
 	"net/url"
 	"testing"
@@ -66,7 +67,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 		},
 		Response: LogContent{
 			Header: resHeader,
-			Body:   []byte(`{"A":"foo","B":7}` + "\n"),
+			Body:   body.NewBodyString(`{"A":"foo","B":7}` + "\n"),
 		},
 		Err:      nil,
 		Start:    t0,
@@ -113,7 +114,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 		},
 		Response: LogContent{
 			Header: resHeader,
-			Body:   []byte(longJSON),
+			Body:   body.NewBodyString(longJSON),
 		},
 		Err:      nil,
 		Start:    t0,
@@ -159,7 +160,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 		},
 		Response: LogContent{
 			Header: resHeader,
-			Body: []byte("So shaken as we are, so wan with care\n" +
+			Body: body.NewBodyString("So shaken as we are, so wan with care\n" +
 				"Find we a time for frighted peace to pant\n" +
 				"And breathe short-winded accents of new broils\n" +
 				"To be commenced in strands afar remote.\n"),
@@ -208,7 +209,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 		},
 		Response: LogContent{
 			Header: resHeader,
-			Body: []byte(`<xml>
+			Body: body.NewBodyString(`<xml>
 <alpha>some text</alpha>
 <beta>some more text</beta>
 <gamma>this might drag on past the 80 char threshold</gamma>
@@ -256,7 +257,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 		},
 		Response: LogContent{
 			Header: resHeader,
-			Body:   []byte("{}\n"),
+			Body:   body.NewBodyString("{}\n"),
 		},
 		Err:      nil,
 		Start:    t0,
@@ -292,7 +293,7 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 		StatusCode: 204,
 		Request: LogContent{
 			Header: reqHeader,
-			Body:   []byte(`{"A":"foo","B":7}` + "\n"),
+			Body:   body.NewBodyString(`{"A":"foo","B":7}` + "\n"),
 		},
 		Start:    t0,
 		Duration: time.Millisecond,
@@ -328,7 +329,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 		StatusCode: 204,
 		Request: LogContent{
 			Header: reqHeader,
-			Body:   []byte(longJSON),
+			Body:   body.NewBodyString(longJSON),
 		},
 		Start:    t0,
 		Duration: time.Millisecond,

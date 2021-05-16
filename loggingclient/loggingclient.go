@@ -30,6 +30,7 @@ func NewWithFilter(upstream httpclient.HttpClient, logger logging.Logger, filter
 	}
 }
 
+// SetCheckRedirect provides access to the http.Client.CheckRedirect field.
 func (lc *LoggingClient) SetCheckRedirect(fn func(req *http.Request, via []*http.Request) error) {
 	if hc, ok := lc.upstream.(*http.Client); ok {
 		hc.CheckRedirect = fn

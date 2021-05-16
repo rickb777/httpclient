@@ -70,9 +70,9 @@ func LogWriter(out io.Writer, dir string) Logger {
 
 		case WithHeadersAndBodies:
 			file := fmt.Sprintf("%s%s_%s_%s", dir, timestamp(item.Start), item.Method, urlToFilename(item.URL.Path))
-			printPart(out, item.Request.Header, true, file, item.Request.Body)
+			printPart(out, item.Request.Header, true, file, item.Request.Body.Bytes())
 			fmt.Fprintln(out)
-			printPart(out, item.Response.Header, false, file, item.Response.Body)
+			printPart(out, item.Response.Header, false, file, item.Response.Body.Bytes())
 			fmt.Fprintln(out, "\n---")
 		}
 	}

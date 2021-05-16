@@ -13,11 +13,12 @@ type LoggingTransport struct {
 	filter   logging.Filter
 }
 
-// Wrap a client and logs all requests made to it.
+// Wrap a client and logs all requests made.
 func Wrap(client *http.Client, logger logging.Logger, level logging.Level) *http.Client {
 	return WrapWithFilter(client, logger, logging.FixedLevel(level))
 }
 
+// WrapWithFilter wraps a client and logs requests made according to the filter.
 func WrapWithFilter(client *http.Client, logger logging.Logger, filter logging.Filter) *http.Client {
 	upstream := http.DefaultTransport
 	if client.Transport != nil {
@@ -28,11 +29,12 @@ func WrapWithFilter(client *http.Client, logger logging.Logger, filter logging.F
 	return client
 }
 
-// New wraps an upstream client and logs all requests made to it.
+// New wraps an upstream client and logs all requests made.
 func New(upstream http.RoundTripper, logger logging.Logger, level logging.Level) http.RoundTripper {
 	return NewWithFilter(upstream, logger, logging.FixedLevel(level))
 }
 
+// NewWithFilter wraps an upstream client and logs requests made according to the filter.
 func NewWithFilter(upstream http.RoundTripper, logger logging.Logger, filter logging.Filter) http.RoundTripper {
 	if upstream == nil || logger == nil {
 		panic("Incorrect setup")
@@ -44,6 +46,7 @@ func NewWithFilter(upstream http.RoundTripper, logger logging.Logger, filter log
 	}
 }
 
+// RoundTrip implements http.RoundTripper.
 func (lt *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	level := lt.filter.Level(req)
 	if level == logging.Off {
