@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -32,7 +33,21 @@ var Now = func() time.Time {
 	return time.Now().UTC()
 }
 
+// FileLogger returns a new Logger writing to a file in dir. The name
+// of the file is provided.
+// The same directory specifies where request and response bodies will be
+// written as files. The current directory is used if this is "." or blank.
+func FileLogger(name string) (Logger, error) {
+	f, err := Fs.Create(name)
+	if err != nil {
+		return nil, err
+	}
+	return LogWriter(f, filepath.Dir(name)), nil
+}
+
 // LogWriter returns a new Logger.
+// The directory dir specifies where request and response bodies will be
+// written as files. The current directory is used if dir is "." or blank.
 func LogWriter(out io.Writer, dir string) Logger {
 	if dir != "" && !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
@@ -54,14 +69,17 @@ func LogWriter(out io.Writer, dir string) Logger {
 			fmt.Fprintln(out, "\n---")
 
 		case WithHeadersAndBodies:
-			tstamp := item.Start.Format("2006-01-02_15-04-05")
-			file := fmt.Sprintf("%s%s_%s_%s", dir, tstamp, item.Method, urlToFilename(item.URL.Path))
+			file := fmt.Sprintf("%s%s_%s_%s", dir, timestamp(item.Start), item.Method, urlToFilename(item.URL.Path))
 			printPart(out, item.Request.Header, true, file, item.Request.Body)
 			fmt.Fprintln(out)
 			printPart(out, item.Response.Header, false, file, item.Response.Body)
 			fmt.Fprintln(out, "\n---")
 		}
 	}
+}
+
+func timestamp(t time.Time) string {
+	return t.Format("2006-01-02_15-04-05")
 }
 
 func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, body []byte) {
