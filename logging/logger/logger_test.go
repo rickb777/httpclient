@@ -31,7 +31,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -61,7 +61,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -105,7 +105,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -149,7 +149,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -196,7 +196,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -242,7 +242,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 	resHeader.Set("Content-Length", "3")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -279,7 +279,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
@@ -312,7 +312,7 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
@@ -345,7 +345,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, afero.NewOsFs())
+	log := LogWriter(buf, afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,

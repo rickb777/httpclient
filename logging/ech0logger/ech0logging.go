@@ -14,8 +14,6 @@ import (
 
 var (
 	// DurationAsString enables writing durations as e.g. "21.4ms" instead of "21.432".
-	// The precision used for strings is to the nearest tenth of a millisecond
-	// (otherwise the precision is to the nearest microsecond).
 	DurationAsString = false
 )
 
@@ -44,7 +42,7 @@ func LogWriter(lgr ech0.Zero, fs afero.Fs) logger.Logger {
 			Int("status", item.StatusCode)
 
 		if DurationAsString {
-			ze = ze.Stringer("duration", item.Duration.Round(100*time.Microsecond))
+			ze = ze.Stringer("duration", item.Duration.Round(time.Microsecond))
 		} else {
 			ze = ze.Dur("duration", item.Duration.Round(time.Microsecond))
 		}

@@ -31,7 +31,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -45,7 +45,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -67,7 +67,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -86,7 +86,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -108,7 +108,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -127,7 +127,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -149,7 +149,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -171,7 +171,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -193,7 +193,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -216,7 +216,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -236,7 +236,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 	resHeader.Set("Content-Length", "3")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
@@ -255,7 +255,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("GET"))
@@ -272,7 +272,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
@@ -288,7 +288,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 	})
 
 	g.Expect(lgr.Errors.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Errors.First())
+	//t.Log(lgr.Errors.First())
 	g.Expect(lgr.Errors.First().Key).To(gomega.Equal("error"))
 	g.Expect(lgr.Errors.First().FindByKey("error").Val).To(gomega.Equal([]byte("Bang!")))
 	g.Expect(lgr.Errors.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
@@ -306,7 +306,7 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
@@ -321,7 +321,7 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("PUT"))
@@ -338,7 +338,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	lgr := testlogger.NewWithConsoleLogger()
-	log := LogWriter(lgr.Timestamp(), afero.NewOsFs())
+	log := LogWriter(lgr.Timestamp(), afero.NewMemMapFs())
 	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
@@ -353,7 +353,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 	})
 
 	g.Expect(lgr.Infos.Len()).To(gomega.Equal(1))
-	t.Log(lgr.Infos.First())
+	//t.Log(lgr.Infos.First())
 	g.Expect(lgr.Infos.First().Key).To(gomega.Equal("t"))
 	g.Expect(lgr.Infos.First().FindByKey("t").Val.(time.Time).Equal(t0)).To(gomega.BeTrue())
 	g.Expect(lgr.Infos.First().FindByKey("method").Val).To(gomega.Equal("PUT"))
