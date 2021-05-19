@@ -12,3 +12,6 @@ type ControlledRedirectClient interface {
 	HttpClient
 	SetCheckRedirect(func(req *http.Request, via []*http.Request) error)
 }
+
+// DefaultClient is the http.Client zero-valued default.
+var DefaultClient HttpClient = &http.Client{}

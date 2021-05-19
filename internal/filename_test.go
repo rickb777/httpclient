@@ -1,4 +1,4 @@
-package logging
+package internal
 
 import (
 	"github.com/onsi/gomega"
@@ -23,7 +23,7 @@ func TestUrlToFilename(t *testing.T) {
 		case 'W':
 			AllowedPunctuationInFilenames = windowsPunct
 		}
-		act := urlToFilename(in[2:])
+		act := UrlToFilename(in[2:])
 		g.Expect(act).To(gomega.Equal(exp), in)
 	}
 }

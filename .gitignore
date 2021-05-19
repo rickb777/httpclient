@@ -17,4 +17,6 @@
 .idea/
 .vscode/
 
-/logging/2021*.*
+/logging/20*.*
+/logging/ech0logger/20*.*
+/logging/logger/20*.*

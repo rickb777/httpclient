@@ -1,4 +1,4 @@
-package logging
+package internal
 
 import (
 	"bytes"
@@ -10,79 +10,11 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 )
 
-// LongBodyThreshold is the body length threshold beyond which the body
-// will be written to a text file (when the content is text). Otherwise
-// it is written inline in the log.
-var LongBodyThreshold = 100
-
-// Logger is a function that processes log items, usually by writing them
-// to a log file.
-type Logger func(item *LogItem)
-
-// Fs provides the filesystem. It can be stubbed for testing.
-var Fs = afero.NewOsFs()
-
-// Now provides the current time. It can be stubbed for testing.
-var Now = func() time.Time {
-	return time.Now().UTC()
-}
-
-// FileLogger returns a new Logger writing to a file in dir. The name
-// of the file is provided.
-// The same directory specifies where request and response bodies will be
-// written as files. The current directory is used if this is "." or blank.
-func FileLogger(name string) (Logger, error) {
-	f, err := Fs.Create(name)
-	if err != nil {
-		return nil, err
-	}
-	return LogWriter(f, filepath.Dir(name)), nil
-}
-
-// LogWriter returns a new Logger.
-// The directory dir specifies where request and response bodies will be
-// written as files. The current directory is used if dir is "." or blank.
-func LogWriter(out io.Writer, dir string) Logger {
-	if dir != "" && !strings.HasSuffix(dir, "/") {
-		dir = dir + "/"
-	}
-	return func(item *LogItem) {
-		// basic info
-		fmt.Fprintf(out, "%-8s %s %d %s", item.Method, item.URL, item.StatusCode, item.Duration.Round(100*time.Microsecond))
-		if item.Err != nil {
-			fmt.Fprintf(out, " %v", item.Err)
-		}
-		fmt.Fprintln(out)
-
-		// verbose info
-		switch item.Level {
-		case WithHeaders:
-			printPart(out, item.Request.Header, true, "", nil)
-			fmt.Fprintln(out)
-			printPart(out, item.Response.Header, false, "", nil)
-			fmt.Fprintln(out, "\n---")
-
-		case WithHeadersAndBodies:
-			file := fmt.Sprintf("%s%s_%s_%s", dir, timestamp(item.Start), item.Method, urlToFilename(item.URL.Path))
-			printPart(out, item.Request.Header, true, file, item.Request.Body.Bytes())
-			fmt.Fprintln(out)
-			printPart(out, item.Response.Header, false, file, item.Response.Body.Bytes())
-			fmt.Fprintln(out, "\n---")
-		}
-	}
-}
-
-func timestamp(t time.Time) string {
-	return t.Format("2006-01-02_15-04-05")
-}
-
-func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, body []byte) {
+func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, file string, body []byte, longBodyThreshold int) {
 	prefix := ternary(isRequest, "-->", "<--")
 	printHeaders(out, hdrs, prefix)
 	contentType := hdrs.Get("Content-Type")
@@ -93,17 +25,16 @@ func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, bod
 	suffix := ternary(isRequest, "req", "resp")
 	name := fmt.Sprintf("%s_%s", file, suffix)
 	justType := strings.SplitN(contentType, ";", 2)[0]
-	if len(body) > LongBodyThreshold {
+	if len(body) > longBodyThreshold {
 		extn := fileExtension(justType)
 		if extn != "" {
-			writeBodyToFile(out, name, extn, body)
+			writeBodyToFile(out, fs, name, extn, body)
 		} else {
 			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
 
 	} else if IsTextual(justType) {
 		// write short body inline
-		fmt.Fprintln(out)
 		fn := &httpclient.WithFinalNewline{W: out}
 		io.Copy(fn, bytes.NewBuffer(body))
 		fn.EnsureFinalNewline()
@@ -113,28 +44,8 @@ func printPart(out io.Writer, hdrs http.Header, isRequest bool, file string, bod
 	}
 }
 
-func fileExtension(mimeType string) string {
-	ctl := strings.ToLower(mimeType)
-
-	// two special cases to ensure consistency across platforms
-	// because the ordering of MIME type mappings is not predictable
-	switch ctl {
-	case "text/plain":
-		return ".txt"
-	case "application/octet-stream":
-		return ".bin"
-	}
-
-	exts, _ := mime.ExtensionsByType(ctl)
-	if len(exts) > 0 {
-		return exts[0]
-	}
-
-	return ""
-}
-
-func writeBodyToFile(out io.Writer, name, extn string, body []byte) {
-	f, err := Fs.Create(name + extn)
+func writeBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte) {
+	f, err := fs.Create(name + extn)
 	if err != nil {
 		fmt.Fprintf(out, "logger open file error: %s\n", err)
 		return
@@ -174,6 +85,26 @@ func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
 			fmt.Fprintf(out, "%s                  %s\n", prefix, v)
 		}
 	}
+}
+
+func fileExtension(mimeType string) string {
+	ctl := strings.ToLower(mimeType)
+
+	// two special cases to ensure consistency across platforms
+	// because the ordering of MIME type mappings is not predictable
+	switch ctl {
+	case "text/plain":
+		return ".txt"
+	case "application/octet-stream":
+		return ".bin"
+	}
+
+	exts, _ := mime.ExtensionsByType(ctl)
+	if len(exts) > 0 {
+		return exts[0]
+	}
+
+	return ""
 }
 
 // IsTextual tests a media type (a.k.a. content type) to determine whether it

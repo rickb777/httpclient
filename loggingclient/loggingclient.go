@@ -2,24 +2,25 @@ package loggingclient
 
 import (
 	"github.com/rickb777/httpclient"
-	"github.com/rickb777/httpclient/internal"
+	. "github.com/rickb777/httpclient/internal"
 	"github.com/rickb777/httpclient/logging"
+	"github.com/rickb777/httpclient/logging/logger"
 	"net/http"
 )
 
 // LoggingClient is a HttpClient with a pluggable logger.
 type LoggingClient struct {
 	upstream httpclient.HttpClient
-	log      logging.Logger
+	log      logger.Logger
 	filter   logging.Filter
 }
 
 // New wraps an upstream client and logs all requests made to it.
-func New(upstream httpclient.HttpClient, logger logging.Logger, level logging.Level) httpclient.HttpClient {
+func New(upstream httpclient.HttpClient, logger logger.Logger, level logging.Level) httpclient.HttpClient {
 	return NewWithFilter(upstream, logger, logging.FixedLevel(level))
 }
 
-func NewWithFilter(upstream httpclient.HttpClient, logger logging.Logger, filter logging.Filter) httpclient.HttpClient {
+func NewWithFilter(upstream httpclient.HttpClient, logger logger.Logger, filter logging.Filter) httpclient.HttpClient {
 	if upstream == nil || logger == nil {
 		panic("Incorrect setup")
 	}
@@ -45,7 +46,7 @@ func (lc *LoggingClient) Do(req *http.Request) (*http.Response, error) {
 		return lc.upstream.Do(req)
 	}
 
-	item := internal.PrepareTheLogItem(req, level)
+	item := PrepareTheLogItem(req, level)
 	res, err := lc.upstream.Do(req)
-	return internal.CompleteTheLoggging(res, err, item, lc.log, level)
+	return CompleteTheLogging(res, err, item, ILogger(lc.log), level)
 }

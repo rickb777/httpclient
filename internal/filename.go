@@ -1,8 +1,9 @@
-package logging
+package internal
 
 import (
 	"os"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -24,17 +25,18 @@ func reset() {
 	}
 }
 
-func urlToFilename(path string) string {
+func FilenameTimestamp(t time.Time) string {
+	return t.Format("2006-01-02_15-04-05")
+}
+
+func UrlToFilename(path string) string {
 	if path == "" {
 		return ""
 	}
-	return removePunctuation(path[1:])
-}
 
-func removePunctuation(s string) string {
 	buf := &strings.Builder{}
 	dash := false
-	for _, c := range s {
+	for _, c := range path[1:] {
 		switch c {
 		case '/':
 			buf.WriteRune('_')

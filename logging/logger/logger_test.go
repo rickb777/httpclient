@@ -1,9 +1,12 @@
-package logging
+package logger
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/onsi/gomega"
 	"github.com/rickb777/httpclient/body"
+	"github.com/rickb777/httpclient/logging"
+	"github.com/spf13/afero"
 	"net/http"
 	"net/url"
 	"testing"
@@ -28,19 +31,20 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request:    LogContent{Header: reqHeader},
-		Response:   LogContent{Header: resHeader},
+		Request:    logging.LogContent{Header: reqHeader},
+		Response:   logging.LogContent{Header: resHeader},
 		Err:        nil,
+		Start:      t0,
 		Duration:   time.Millisecond,
 		Level:      0,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal("GET      http://somewhere.com/a/b/c 200 1ms\n"), buf.String())
+	g.Expect(buf.String()).To(gomega.Equal("10:11:12 GET      http://somewhere.com/a/b/c 200 1ms\n"), buf.String())
 }
 
 func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
@@ -57,35 +61,32 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 		},
-		Response: LogContent{
+		Response: logging.LogContent{
 			Header: resHeader,
 			Body:   body.NewBodyString(`{"A":"foo","B":7}` + "\n"),
 		},
 		Err:      nil,
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
+		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/json
 --> Cookie:          a=123
 -->                  b=4556
-
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-
 {"A":"foo","B":7}
-
 ---
 `), buf.String())
 }
@@ -104,34 +105,32 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 		},
-		Response: LogContent{
+		Response: logging.LogContent{
 			Header: resHeader,
 			Body:   body.NewBodyString(longJSON),
 		},
 		Err:      nil,
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
+		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/json
 --> Cookie:          a=123
 -->                  b=4556
-
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-see ./2021-04-01_10-11-12_GET_a_b_c_resp.json
-
+see 2021-04-01_10-11-12_GET_a_b_c_resp.json
 ---
 `), buf.String())
 }
@@ -150,15 +149,15 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 		},
-		Response: LogContent{
+		Response: logging.LogContent{
 			Header: resHeader,
 			Body: body.NewBodyString("So shaken as we are, so wan with care\n" +
 				"Find we a time for frighted peace to pant\n" +
@@ -168,19 +167,17 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 		Err:      nil,
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
+		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          text/*
 --> Cookie:          a=123
 -->                  b=4556
-
 <-- Content-Length:  18
 <-- Content-Type:    text/plain; charset=UTF-8
-see ./2021-04-01_10-11-12_GET_a_b_c_resp.txt
-
+see 2021-04-01_10-11-12_GET_a_b_c_resp.txt
 ---
 `), buf.String())
 }
@@ -199,15 +196,15 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	resHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 		},
-		Response: LogContent{
+		Response: logging.LogContent{
 			Header: resHeader,
 			Body: body.NewBodyString(`<xml>
 <alpha>some text</alpha>
@@ -218,19 +215,17 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 		Err:      nil,
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`GET      http://somewhere.com/a/b/c?foo=1 200 1ms
+		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/xml
 --> Cookie:          a=123
 -->                  b=4556
-
 <-- Content-Length:  18
 <-- Content-Type:    application/xml; charset=UTF-8
-see ./2021-04-01_10-11-12_GET_a_b_c_resp.xml
-
+see 2021-04-01_10-11-12_GET_a_b_c_resp.xml
 ---
 `), buf.String())
 }
@@ -247,32 +242,63 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 	resHeader.Set("Content-Length", "3")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "GET",
 		URL:        u,
 		StatusCode: 200,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 		},
-		Response: LogContent{
+		Response: logging.LogContent{
 			Header: resHeader,
 			Body:   body.NewBodyString("{}\n"),
 		},
 		Err:      nil,
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`GET      http://somewhere.com/a/b/c 200 1ms
+		`10:11:12 GET      http://somewhere.com/a/b/c 200 1ms
 --> Accept:          application/*
-
 <-- Content-Length:  3
 <-- Content-Type:    application/octet-stream
 <-- binary content [3]byte
+---
+`), buf.String())
+}
 
+func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	u, _ := url.Parse("http://somewhere.com/a/b/c")
+	reqHeader := make(http.Header)
+	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
+	reqHeader.Set("Content-Length", "18")
+
+	buf := &bytes.Buffer{}
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
+		Method:     "PUT",
+		URL:        u,
+		StatusCode: 0,
+		Request: logging.LogContent{
+			Header: reqHeader,
+			Body:   body.NewBodyString(`{"A":"foo","B":7}` + "\n"),
+		},
+		Start:    t0,
+		Duration: 123456,
+		Level:    logging.WithHeaders,
+		Err:      fmt.Errorf("Bang!"),
+	})
+
+	g.Expect(buf.String()).To(gomega.Equal(
+		`10:11:12 PUT      http://somewhere.com/a/b/c 0 123µs Bang!
+--> Content-Length:  18
+--> Content-Type:    application/json; charset=UTF-8
+<-- no headers
 ---
 `), buf.String())
 }
@@ -286,29 +312,26 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
 		StatusCode: 204,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 			Body:   body.NewBodyString(`{"A":"foo","B":7}` + "\n"),
 		},
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`PUT      http://somewhere.com/a/b/c 204 1ms
+		`10:11:12 PUT      http://somewhere.com/a/b/c 204 1ms
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
-
 {"A":"foo","B":7}
-
 <-- no headers
-
 ---
 `), buf.String())
 }
@@ -322,28 +345,26 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 	reqHeader.Set("Content-Length", "18")
 
 	buf := &bytes.Buffer{}
-	log := LogWriter(buf, ".")
-	log(&LogItem{
+	log := LogWriter(buf, afero.NewOsFs())
+	log(&logging.LogItem{
 		Method:     "PUT",
 		URL:        u,
 		StatusCode: 204,
-		Request: LogContent{
+		Request: logging.LogContent{
 			Header: reqHeader,
 			Body:   body.NewBodyString(longJSON),
 		},
 		Start:    t0,
 		Duration: time.Millisecond,
-		Level:    WithHeadersAndBodies,
+		Level:    logging.WithHeadersAndBodies,
 	})
 
 	g.Expect(buf.String()).To(gomega.Equal(
-		`PUT      http://somewhere.com/a/b/c 204 1ms
+		`10:11:12 PUT      http://somewhere.com/a/b/c 204 1ms
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
-see ./2021-04-01_10-11-12_PUT_a_b_c_req.json
-
+see 2021-04-01_10-11-12_PUT_a_b_c_req.json
 <-- no headers
-
 ---
 `), buf.String())
 }

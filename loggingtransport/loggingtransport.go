@@ -1,25 +1,26 @@
 package loggingtransport
 
 import (
-	"github.com/rickb777/httpclient/internal"
+	. "github.com/rickb777/httpclient/internal"
 	"github.com/rickb777/httpclient/logging"
+	"github.com/rickb777/httpclient/logging/logger"
 	"net/http"
 )
 
 // LoggingTransport is a http.RoundTripper with a pluggable logger.
 type LoggingTransport struct {
 	upstream http.RoundTripper
-	log      logging.Logger
+	log      logger.Logger
 	filter   logging.Filter
 }
 
 // Wrap a client and logs all requests made.
-func Wrap(client *http.Client, logger logging.Logger, level logging.Level) *http.Client {
+func Wrap(client *http.Client, logger logger.Logger, level logging.Level) *http.Client {
 	return WrapWithFilter(client, logger, logging.FixedLevel(level))
 }
 
 // WrapWithFilter wraps a client and logs requests made according to the filter.
-func WrapWithFilter(client *http.Client, logger logging.Logger, filter logging.Filter) *http.Client {
+func WrapWithFilter(client *http.Client, logger logger.Logger, filter logging.Filter) *http.Client {
 	upstream := http.DefaultTransport
 	if client.Transport != nil {
 		upstream = client.Transport
@@ -30,12 +31,12 @@ func WrapWithFilter(client *http.Client, logger logging.Logger, filter logging.F
 }
 
 // New wraps an upstream client and logs all requests made.
-func New(upstream http.RoundTripper, logger logging.Logger, level logging.Level) http.RoundTripper {
+func New(upstream http.RoundTripper, logger logger.Logger, level logging.Level) http.RoundTripper {
 	return NewWithFilter(upstream, logger, logging.FixedLevel(level))
 }
 
 // NewWithFilter wraps an upstream client and logs requests made according to the filter.
-func NewWithFilter(upstream http.RoundTripper, logger logging.Logger, filter logging.Filter) http.RoundTripper {
+func NewWithFilter(upstream http.RoundTripper, logger logger.Logger, filter logging.Filter) http.RoundTripper {
 	if upstream == nil || logger == nil {
 		panic("Incorrect setup")
 	}
@@ -53,7 +54,7 @@ func (lt *LoggingTransport) RoundTrip(req *http.Request) (*http.Response, error)
 		return lt.upstream.RoundTrip(req)
 	}
 
-	item := internal.PrepareTheLogItem(req, level)
+	item := PrepareTheLogItem(req, level)
 	res, err := lt.upstream.RoundTrip(req)
-	return internal.CompleteTheLoggging(res, err, item, lt.log, level)
+	return CompleteTheLogging(res, err, item, ILogger(lt.log), level)
 }

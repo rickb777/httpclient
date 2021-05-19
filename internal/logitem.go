@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bytes"
 	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/logging"
 	"io"
@@ -41,7 +40,9 @@ func PrepareTheLogItem(req *http.Request, level logging.Level) *logging.LogItem 
 	return item
 }
 
-func CompleteTheLoggging(res *http.Response, err error, item *logging.LogItem, log logging.Logger, level logging.Level) (*http.Response, error) {
+type ILogger func(item *logging.LogItem)
+
+func CompleteTheLogging(res *http.Response, err error, item *logging.LogItem, log ILogger, level logging.Level) (*http.Response, error) {
 	item.Duration = logging.Now().Sub(item.Start)
 
 	if res != nil {
@@ -73,10 +74,4 @@ func CompleteTheLoggging(res *http.Response, err error, item *logging.LogItem, l
 
 	log(item)
 	return res, nil
-}
-
-func readIntoBuffer(in io.Reader) (*bytes.Buffer, error) {
-	buf := &bytes.Buffer{}
-	_, err := buf.ReadFrom(in)
-	return buf, err
 }
