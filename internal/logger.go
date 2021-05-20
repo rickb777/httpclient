@@ -26,9 +26,9 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 	name := fmt.Sprintf("%s_%s", file, suffix)
 	justType := strings.SplitN(contentType, ";", 2)[0]
 	if len(body) > longBodyThreshold {
-		extn := fileExtension(justType)
+		extn := FileExtension(justType)
 		if extn != "" {
-			writeBodyToFile(out, fs, name, extn, body)
+			WriteBodyToFile(out, fs, name, extn, body)
 		} else {
 			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
@@ -44,14 +44,14 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 	}
 }
 
-func writeBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte) {
+func WriteBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte) {
 	f, err := fs.Create(name + extn)
 	if err != nil {
 		fmt.Fprintf(out, "logger open file error: %s\n", err)
 		return
 	}
 
-	err = prettyPrinterFactory(extn)(f, body)
+	err = PrettyPrinterFactory(extn)(f, body)
 	if err != nil {
 		fmt.Fprintf(out, "logger transcode error: %s\n", err)
 		return
@@ -87,7 +87,7 @@ func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
 	}
 }
 
-func fileExtension(mimeType string) string {
+func FileExtension(mimeType string) string {
 	ctl := strings.ToLower(mimeType)
 
 	// two special cases to ensure consistency across platforms
@@ -148,7 +148,7 @@ func ternary(predicate bool, yes, no string) string {
 
 type transcoder func(out io.Writer, body []byte) error
 
-func prettyPrinterFactory(extension string) transcoder {
+func PrettyPrinterFactory(extension string) transcoder {
 	switch extension {
 	case ".json":
 		return jsonTranscoder

@@ -18,8 +18,9 @@ var (
 )
 
 // LogWriter returns a new Logger.
-// The directory dir specifies where request and response bodies will be
-// written as files, if enabled. The current directory is used if dir is "." or blank.
+// The filesystem fs specifies where request and response bodies will be
+// written as files, if enabled by the item's level.
+// If fs is nil, the OS filesystem is used.
 func LogWriter(lgr ech0.Zero, fs afero.Fs) logger.Logger {
 	lgr.Timestamp()
 	return func(item *logging.LogItem) {
