@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -33,10 +34,13 @@ func UrlToFilename(path string) string {
 	if path == "" {
 		return ""
 	}
+	if path[0] == '/' {
+		path = path[1:]
+	}
 
 	buf := &strings.Builder{}
 	dash := false
-	for _, c := range path[1:] {
+	for _, c := range path {
 		switch c {
 		case '/':
 			buf.WriteRune('_')
@@ -54,4 +58,12 @@ func UrlToFilename(path string) string {
 		}
 	}
 	return buf.String()
+}
+
+func Hostname(hdrs http.Header) string {
+	host := UrlToFilename(hdrs.Get("Host"))
+	if host != "" {
+		host += "_"
+	}
+	return host
 }

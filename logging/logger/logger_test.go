@@ -22,6 +22,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -52,6 +53,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -84,6 +86,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 --> Accept:          application/json
 --> Cookie:          a=123
 -->                  b=4556
+--> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
 {"A":"foo","B":7}
@@ -96,6 +99,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -128,9 +132,10 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 --> Accept:          application/json
 --> Cookie:          a=123
 -->                  b=4556
+--> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-see 2021-04-01_10-11-12_GET_a_b_c_resp.json
+see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.json
 ---
 `), buf.String())
 }
@@ -140,6 +145,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "text/*")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -175,9 +181,10 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 --> Accept:          text/*
 --> Cookie:          a=123
 -->                  b=4556
+--> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    text/plain; charset=UTF-8
-see 2021-04-01_10-11-12_GET_a_b_c_resp.txt
+see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.txt
 ---
 `), buf.String())
 }
@@ -187,6 +194,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/xml")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -223,9 +231,10 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 --> Accept:          application/xml
 --> Cookie:          a=123
 -->                  b=4556
+--> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/xml; charset=UTF-8
-see 2021-04-01_10-11-12_GET_a_b_c_resp.xml
+see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.xml
 ---
 `), buf.String())
 }
@@ -235,6 +244,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/*")
 
 	resHeader := make(http.Header)
@@ -263,6 +273,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 	g.Expect(buf.String()).To(gomega.Equal(
 		`10:11:12 GET      http://somewhere.com/a/b/c 200 1ms
 --> Accept:          application/*
+--> Host:            somewhere.com
 <-- Content-Length:  3
 <-- Content-Type:    application/octet-stream
 <-- binary content [3]byte
@@ -275,6 +286,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
 	reqHeader.Set("Content-Length", "18")
 
@@ -298,6 +310,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 		`10:11:12 PUT      http://somewhere.com/a/b/c 0 123µs Bang!
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
+--> Host:            somewhere.com
 <-- no headers
 ---
 `), buf.String())

@@ -22,6 +22,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -58,6 +59,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -99,6 +101,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/json")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -140,6 +143,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "text/*")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -184,6 +188,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/xml")
 	reqHeader.Set("Cookie", "a=123")
 	reqHeader.Add("Cookie", "b=4556")
@@ -229,6 +234,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Accept", "application/*")
 
 	resHeader := make(http.Header)
@@ -268,6 +274,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
 	reqHeader.Set("Content-Length", "18")
 
@@ -334,6 +341,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
 	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
 	reqHeader.Set("Content-Length", "18")
 
