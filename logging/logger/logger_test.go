@@ -135,7 +135,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.json
+see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.json
 ---
 `), buf.String())
 }
@@ -184,7 +184,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    text/plain; charset=UTF-8
-see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.txt
+see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.txt
 ---
 `), buf.String())
 }
@@ -234,7 +234,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/xml; charset=UTF-8
-see 2021-04-01_10-11-12_somewhere.com_GET_a_b_c_resp.xml
+see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.xml
 ---
 `), buf.String())
 }

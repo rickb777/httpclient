@@ -58,7 +58,8 @@ func LogWriter(lgr ech0.Zero, fs afero.Fs) logger.Logger {
 			fmt.Fprintln(out, "---")
 
 		case logging.WithHeadersAndBodies:
-			file := fmt.Sprintf("%s_%s%s_%s", FilenameTimestamp(item.Start), Hostname(item.Request.Header), item.Method, UrlToFilename(item.URL.Path))
+			file := fmt.Sprintf("%s_%s_%s%s", FilenameTimestamp(item.Start), item.Method,
+				Hostname(item.Request.Header), UrlToFilename(item.URL.Path))
 			PrintPart(out, fs, item.Request.Header, true, file, item.Request.Body.Bytes(), logger.LongBodyThreshold)
 			PrintPart(out, fs, item.Response.Header, false, file, item.Response.Body.Bytes(), logger.LongBodyThreshold)
 			fmt.Fprintln(out, "---")

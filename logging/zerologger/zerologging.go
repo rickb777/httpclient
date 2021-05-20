@@ -59,7 +59,8 @@ func LogWriter(lgr zerolog.Logger, fs afero.Fs) logger.Logger {
 			ze = printPart(ze, fs, item.Response.Header, false, "", nil, logger.LongBodyThreshold)
 
 		case logging.WithHeadersAndBodies:
-			file := fmt.Sprintf("%s_%s%s_%s", FilenameTimestamp(item.Start), Hostname(item.Request.Header), item.Method, UrlToFilename(item.URL.Path))
+			file := fmt.Sprintf("%s_%s_%s%s", FilenameTimestamp(item.Start), item.Method,
+				Hostname(item.Request.Header), UrlToFilename(item.URL.Path))
 			ze = printPart(ze, fs, item.Request.Header, true, file, item.Request.Body.Bytes(), logger.LongBodyThreshold)
 			ze = printPart(ze, fs, item.Response.Header, false, file, item.Response.Body.Bytes(), logger.LongBodyThreshold)
 		}
