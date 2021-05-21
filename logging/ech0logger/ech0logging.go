@@ -7,6 +7,7 @@ import (
 	. "github.com/rickb777/httpclient/internal"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
+	"github.com/rs/zerolog"
 	"github.com/spf13/afero"
 	"strings"
 	"time"
@@ -37,7 +38,7 @@ func LogWriter(lgr ech0.Zero, fs afero.Fs) logger.Logger {
 
 		// basic info
 		ze = ze.
-			Stringer("t", item.Start).
+			Str("at", item.Start.Format(zerolog.TimeFieldFormat)).
 			Str("method", item.Method).
 			Stringer("url", item.URL).
 			Int("status", item.StatusCode)

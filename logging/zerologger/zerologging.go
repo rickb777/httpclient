@@ -40,7 +40,7 @@ func LogWriter(lgr zerolog.Logger, fs afero.Fs) logger.Logger {
 
 		// basic info
 		ze = ze.
-			Stringer("t", item.Start).
+			Str("at", item.Start.Format(zerolog.TimeFieldFormat)).
 			Str("method", item.Method).
 			Stringer("url", item.URL).
 			Int("status", item.StatusCode)
