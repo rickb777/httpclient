@@ -1,4 +1,4 @@
-package ech0logger
+package zerologger
 
 import (
 	"fmt"
