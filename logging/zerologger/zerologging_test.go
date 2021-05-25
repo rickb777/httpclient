@@ -53,7 +53,7 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c"`))
@@ -96,7 +96,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
@@ -141,7 +141,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
@@ -191,7 +191,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
@@ -241,7 +241,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
@@ -285,7 +285,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":200`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"GET"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c"`))
@@ -323,7 +323,7 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"error"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"error":"Bang!"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":0`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"PUT"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c"`))
@@ -357,7 +357,7 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":204`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"PUT"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c"`))
@@ -393,7 +393,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 
 	msg := lgrBuf.String()
 	g.Expect(msg).To(gomega.ContainSubstring(`"level":"info"`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"t":"20`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"at":"20`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"status":204`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"method":"PUT"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c"`))

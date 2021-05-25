@@ -1,7 +1,7 @@
 package logging
 
 // see github.com/rickb777/enumeration/v2
-//go:generate enumeration -type Level
+//go:generate enumeration -v -type Level -ic
 
 // Level allows control of the predicate of detail in log messages.
 type Level int
