@@ -27,7 +27,7 @@ func reset() {
 }
 
 func FilenameTimestamp(t time.Time) string {
-	return t.Format("2006-01-02_15-04-05")
+	return strings.Replace(t.Format("2006-01-02_15-04-05.000"), ".", "-", 1)
 }
 
 func UrlToFilename(path string) string {

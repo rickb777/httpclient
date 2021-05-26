@@ -20,7 +20,7 @@ func init() {
 
 const longJSON = `{"alpha":"some text","beta":"some more text","gamma":"this might drag on","delta":"and on past the 80 char threshold"}` + "\n"
 
-var t0 = time.Date(2021, 04, 01, 10, 11, 12, 0, time.UTC)
+var t0 = time.Date(2021, 04, 01, 10, 11, 12, 1000000, time.UTC)
 
 func TestLogWriter_typical_GET_terse(t *testing.T) {
 	g := gomega.NewWithT(t)
@@ -148,7 +148,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 	g.Expect(msg).To(gomega.ContainSubstring(`"duration":1`))
 	g.Expect(msg).NotTo(gomega.ContainSubstring(`"req_body":`))
 	g.Expect(msg).NotTo(gomega.ContainSubstring(`"resp_body":`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.json"`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.json"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"resp_body_len":119`))
 }
 
@@ -197,7 +197,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"duration":1`))
 	g.Expect(msg).NotTo(gomega.ContainSubstring(`"resp_body":`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.txt"`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.txt"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"resp_body_len":167`))
 }
 
@@ -247,7 +247,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 	g.Expect(msg).To(gomega.ContainSubstring(`"url":"http://somewhere.com/a/b/c?foo=1"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"duration":1`))
 	g.Expect(msg).NotTo(gomega.ContainSubstring(`"resp_body":`))
-	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.xml"`))
+	g.Expect(msg).To(gomega.ContainSubstring(`"resp_file":"2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.xml"`))
 	g.Expect(msg).To(gomega.ContainSubstring(`"resp_body_len":127`))
 }
 

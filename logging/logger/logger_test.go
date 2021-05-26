@@ -15,7 +15,7 @@ import (
 
 const longJSON = `{"alpha":"some text","beta":"some more text","gamma":"this might drag on","delta":"and on past the 80 char threshold"}` + "\n"
 
-var t0 = time.Date(2021, 04, 01, 10, 11, 12, 0, time.UTC)
+var t0 = time.Date(2021, 04, 01, 10, 11, 12, 1000000, time.UTC)
 
 func TestLogWriter_typical_GET_terse(t *testing.T) {
 	g := gomega.NewWithT(t)
@@ -135,7 +135,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/json; charset=UTF-8
-see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.json
+see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.json
 ---
 `), buf.String())
 }
@@ -184,7 +184,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    text/plain; charset=UTF-8
-see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.txt
+see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.txt
 ---
 `), buf.String())
 }
@@ -234,7 +234,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 --> Host:            somewhere.com
 <-- Content-Length:  18
 <-- Content-Type:    application/xml; charset=UTF-8
-see 2021-04-01_10-11-12_GET_somewhere.com_a_b_c_resp.xml
+see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.xml
 ---
 `), buf.String())
 }
@@ -376,7 +376,7 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 		`10:11:12 PUT      http://somewhere.com/a/b/c 204 1ms
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
-see 2021-04-01_10-11-12_PUT_a_b_c_req.json
+see 2021-04-01_10-11-12-001_PUT_a_b_c_req.json
 <-- no headers
 ---
 `), buf.String())
