@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,8 +21,36 @@ type TestingT interface {
 	Helper()
 }
 
+const (
+	ContentTypeApplicationJSON = "application/json; charset=UTF-8"
+	ContentTypeApplicationXML  = "application/xml; charset=UTF-8"
+)
+
+// MockJSONResponse builds a JSON http.Response using a literal JSON string or a data struct.
+func MockJSONResponse(code int, body interface{}) *http.Response {
+	if b, ok := body.(string); ok {
+		return MockResponse(code, []byte(b), ContentTypeApplicationJSON)
+	}
+
+	s := &bytes.Buffer{}
+	must(json.NewEncoder(s).Encode(body))
+	return MockResponse(code, s.Bytes(), ContentTypeApplicationJSON)
+}
+
+// MockXMLResponse builds an XML http.Response using a literal XML string or a data struct.
+func MockXMLResponse(code int, body interface{}) *http.Response {
+	if b, ok := body.(string); ok {
+		return MockResponse(code, []byte(b), ContentTypeApplicationXML)
+	}
+
+	s := &bytes.Buffer{}
+	must(xml.NewEncoder(s).Encode(body))
+	return MockResponse(code, s.Bytes(), ContentTypeApplicationXML)
+}
+
 // MockResponse builds a http.Response.
 func MockResponse(code int, body []byte, contentType string) *http.Response {
+	body = withTrailingNewline(body)
 	res := &http.Response{
 		StatusCode: code,
 		Header:     make(http.Header),
@@ -28,7 +58,9 @@ func MockResponse(code int, body []byte, contentType string) *http.Response {
 	}
 
 	res.Header.Set("Content-Length", strconv.Itoa(len(body)))
-	res.Header.Set("Content-Type", contentType)
+	if contentType != "" {
+		res.Header.Set("Content-Type", contentType)
+	}
 	return res
 }
 
@@ -86,7 +118,7 @@ func (m *MockHttpClient) AddLiteralResponse(method, url string, wholeResponse st
 
 func (m *MockHttpClient) AddLiteralByteResponse(method, url string, wholeResponse []byte) *MockHttpClient {
 	g := gomega.NewWithT(m.t)
-	rdr := bufio.NewReader(bytes.NewBuffer(wholeResponse))
+	rdr := bufio.NewReader(bytes.NewBuffer(withTrailingNewline(wholeResponse)))
 	res, err := http.ReadResponse(rdr, nil)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -141,10 +173,23 @@ func (m *MockHttpClient) RoundTrip(req *http.Request) (*http.Response, error) {
 	return o.Response, nil
 }
 
+func withTrailingNewline(body []byte) []byte {
+	if len(body) > 0 && body[len(body)-1] != '\n' {
+		body = append(body, '\n')
+	}
+	return body
+}
+
 // TODO possibly remove this - see rest.ReadString
 
 func ReadString(r io.Reader) string {
 	buf := &bytes.Buffer{}
 	buf.ReadFrom(r)
 	return buf.String()
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
