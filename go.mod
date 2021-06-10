@@ -3,6 +3,7 @@ module github.com/rickb777/httpclient
 go 1.16
 
 require (
+	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/go-xmlfmt/xmlfmt v0.0.0-20191208150333-d5b6f63a941b
 	github.com/onsi/gomega v1.12.0
 	github.com/rickb777/enumeration/v2 v2.5.0

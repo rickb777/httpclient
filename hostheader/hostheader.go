@@ -1,5 +1,8 @@
 // Package hostheader provides a HttpClient wrapper that automatically inserts
-// the Host header into the requests it makes.
+// the Host header into the requests it makes. Host headers are a mandatory
+// requirement (https://datatracker.ietf.org/doc/html/rfc7230#section-5.4).
+//
+// See also package prefix that extends this by inserting a prefix on all URLs.
 package hostheader
 
 import (
