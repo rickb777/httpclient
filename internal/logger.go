@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-xmlfmt/xmlfmt"
 	"github.com/rickb777/httpclient"
+	bodypkg "github.com/rickb777/httpclient/body"
 	"github.com/spf13/afero"
 	"io"
 	"mime"
@@ -14,7 +15,9 @@ import (
 	"strings"
 )
 
+// PrintPart prints the headers and entity (body) for either the request or the response.
 func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, file string, body []byte, longBodyThreshold int) {
+
 	prefix := ternary(isRequest, "-->", "<--")
 	printHeaders(out, hdrs, prefix)
 	contentType := hdrs.Get("Content-Type")
@@ -44,6 +47,7 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 	}
 }
 
+// WriteBodyToFile writes one body (entity) to a file.
 func WriteBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte) {
 	f, err := fs.Create(name + extn)
 	if err != nil {
@@ -51,7 +55,7 @@ func WriteBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte)
 		return
 	}
 
-	err = PrettyPrinterFactory(extn)(f, body)
+	err = bodypkg.PrettyPrint(extn, f, body)
 	if err != nil {
 		fmt.Fprintf(out, "logger transcode error: %s\n", err)
 		return
@@ -146,16 +150,17 @@ func ternary(predicate bool, yes, no string) string {
 //-------------------------------------------------------------------------------------------------
 // pretty printing via transcoding: implemented for JSON and XML only
 
-type transcoder func(out io.Writer, body []byte) error
-
-func PrettyPrinterFactory(extension string) transcoder {
+func PrettyPrint(indent, extension string, out io.Writer, body []byte) error {
+	if len(indent) == 0 {
+		return writePlainText(out, body)
+	}
 	switch extension {
 	case ".json":
-		return jsonTranscoder
+		return writeJSONFile(indent, out, body)
 	case ".xml":
-		return xmlTranscoder
+		return writeXMLFile(indent, out, body)
 	}
-	return writePlainText
+	return writePlainText(out, body)
 }
 
 func writePlainText(out io.Writer, body []byte) error {
@@ -167,7 +172,7 @@ func writePlainText(out io.Writer, body []byte) error {
 
 //-------------------------------------------------------------------------------------------------
 
-func jsonTranscoder(out io.Writer, body []byte) error {
+func writeJSONFile(indent string, out io.Writer, body []byte) error {
 	var data interface{}
 	err := json.NewDecoder(bytes.NewReader(body)).Decode(&data)
 	if err != nil {
@@ -175,14 +180,14 @@ func jsonTranscoder(out io.Writer, body []byte) error {
 	}
 
 	enc := json.NewEncoder(out)
-	enc.SetIndent("", "  ")
+	enc.SetIndent("", indent)
 	return enc.Encode(data)
 }
 
 //-------------------------------------------------------------------------------------------------
 
-func xmlTranscoder(out io.Writer, body []byte) error {
-	xml := xmlfmt.FormatXML(string(body), "", "    ")
+func writeXMLFile(indent string, out io.Writer, body []byte) error {
+	xml := xmlfmt.FormatXML(string(body), "", indent)
 	if strings.HasPrefix(xml, xmlfmt.NL) {
 		xml = xml[len(xmlfmt.NL):]
 	}

@@ -14,15 +14,17 @@ import (
 )
 
 // LongBodyThreshold is the body length threshold beyond which the body
-// will be written to a text file (when the content is text). Otherwise
+// will be written to a file. Otherwise, if the content is textual,
 // it is written inline in the log.
+//
+// This is ignored unless level == WithHeadersAndBodies.
 var LongBodyThreshold = 100
 
 // TimeFormat sets the appearance of the timestamp that prefixes each logged
-// message.
+// message. The default is "15:04:05". See time.Format.
 var TimeFormat = "15:04:05"
 
-// Logger is a function that processes log items, usually by writing them
+// Logger is a function that processes log items, e.g. by writing them
 // to a log file.
 type Logger func(item *logging.LogItem)
 

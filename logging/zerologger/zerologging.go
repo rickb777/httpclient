@@ -3,6 +3,7 @@ package zerologger
 import (
 	"encoding/json"
 	"fmt"
+	bodypkg "github.com/rickb777/httpclient/body"
 	. "github.com/rickb777/httpclient/internal"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
@@ -108,7 +109,7 @@ func writeBodyToFile(ze *zerolog.Event, fs afero.Fs, prefix, name, extn string, 
 		return ze
 	}
 
-	err = PrettyPrinterFactory(extn)(f, body)
+	err = bodypkg.PrettyPrint(extn, f, body)
 	if err != nil {
 		log.Printf("logger transcode error: %s\n", err)
 		return ze
