@@ -3,8 +3,8 @@ package zerologger
 import (
 	"encoding/json"
 	"fmt"
-	bodypkg "github.com/rickb777/httpclient/body"
-	. "github.com/rickb777/httpclient/internal"
+	bodypkg "github.com/rickb777/httpclient/file"
+	"github.com/rickb777/httpclient/internal/mime"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
 	"github.com/rs/zerolog"
@@ -60,8 +60,7 @@ func LogWriter(lgr zerolog.Logger, fs afero.Fs) logger.Logger {
 			ze = printPart(ze, fs, item.Response.Header, false, "", nil, logger.LongBodyThreshold)
 
 		case logging.WithHeadersAndBodies:
-			file := fmt.Sprintf("%s_%s_%s%s", FilenameTimestamp(item.Start), item.Method,
-				Hostname(item.Request.Header), UrlToFilename(item.URL.Path))
+			file := item.FileName()
 			ze = printPart(ze, fs, item.Request.Header, true, file, item.Request.Body.Bytes(), logger.LongBodyThreshold)
 			ze = printPart(ze, fs, item.Response.Header, false, file, item.Response.Body.Bytes(), logger.LongBodyThreshold)
 		}
@@ -86,13 +85,13 @@ func printPart(ze *zerolog.Event, fs afero.Fs, hdrs http.Header, isRequest bool,
 	name := fmt.Sprintf("%s_%s", file, suffix)
 	justType := strings.SplitN(contentType, ";", 2)[0]
 	if len(body) > longBodyThreshold {
-		extn := FileExtension(justType)
+		extn := mime.FileExtension(justType)
 		if extn != "" {
 			ze = writeBodyToFile(ze, fs, prefix, name, extn, body)
 		}
 		ze = ze.Int(prefix+"_body_len", len(body))
 
-	} else if IsTextual(justType) {
+	} else if mime.IsTextual(justType) {
 		// write short body inline
 		ze = ze.Str(prefix+"_body", strings.Trim(string(body), "\n"))
 

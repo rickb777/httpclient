@@ -1,4 +1,4 @@
-package body
+package file
 
 import (
 	"bytes"
@@ -20,19 +20,20 @@ var PrettyIndent = ""
 // implemented via transcoding for JSON and XML only. All other file times
 // are written verbatim.
 func PrettyPrint(extension string, out io.Writer, body []byte) error {
+	fn := &httpclient.WithFinalNewline{W: out}
+	defer fn.EnsureFinalNewline()
+
 	switch extension {
 	case ".json":
-		return WriteJSONFile(out, body)
+		return WriteJSONFile(fn, body)
 	case ".xml":
-		return WriteXMLFile(out, body)
+		return WriteXMLFile(fn, body)
 	}
-	return writePlainText(out, body)
+	return writePlainText(fn, body)
 }
 
 func writePlainText(out io.Writer, body []byte) error {
-	fn := &httpclient.WithFinalNewline{W: out}
-	_, err := bytes.NewBuffer(body).WriteTo(fn)
-	fn.EnsureFinalNewline()
+	_, err := bytes.NewBuffer(body).WriteTo(out)
 	return err
 }
 
@@ -71,8 +72,7 @@ var WriteXMLFile = func(out io.Writer, body []byte) error {
 	if strings.HasPrefix(xml, xmlfmt.NL) {
 		xml = xml[len(xmlfmt.NL):]
 	}
-	_, err := io.WriteString(out, xml)
-	out.Write([]byte{'\n'})
+	_, err := strings.NewReader(xml).WriteTo(out)
 	return err
 }
 

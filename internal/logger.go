@@ -2,14 +2,12 @@ package internal
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/go-xmlfmt/xmlfmt"
 	"github.com/rickb777/httpclient"
-	bodypkg "github.com/rickb777/httpclient/body"
+	bodypkg "github.com/rickb777/httpclient/file"
+	"github.com/rickb777/httpclient/internal/mime"
 	"github.com/spf13/afero"
 	"io"
-	"mime"
 	"net/http"
 	"sort"
 	"strings"
@@ -29,14 +27,14 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 	name := fmt.Sprintf("%s_%s", file, suffix)
 	justType := strings.SplitN(contentType, ";", 2)[0]
 	if len(body) > longBodyThreshold {
-		extn := FileExtension(justType)
+		extn := mime.FileExtension(justType)
 		if extn != "" {
 			WriteBodyToFile(out, fs, name, extn, body)
 		} else {
 			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
 
-	} else if IsTextual(justType) {
+	} else if mime.IsTextual(justType) {
 		// write short body inline
 		fn := &httpclient.WithFinalNewline{W: out}
 		io.Copy(fn, bytes.NewBuffer(body))
@@ -91,110 +89,9 @@ func printHeaders(out io.Writer, hdrs http.Header, prefix string) {
 	}
 }
 
-func FileExtension(mimeType string) string {
-	ctl := strings.ToLower(mimeType)
-
-	// two special cases to ensure consistency across platforms
-	// because the ordering of MIME type mappings is not predictable
-	switch ctl {
-	case "text/plain":
-		return ".txt"
-	case "application/octet-stream":
-		return ".bin"
-	}
-
-	exts, _ := mime.ExtensionsByType(ctl)
-	if len(exts) > 0 {
-		return exts[0]
-	}
-
-	return ""
-}
-
-// IsTextual tests a media type (a.k.a. content type) to determine whether it
-// describes text or binary content.
-func IsTextual(contentType string) bool {
-	cts := strings.SplitN(contentType, ";", 2)
-	ps := strings.SplitN(strings.TrimSpace(cts[0]), "/", 2)
-	if len(ps) != 2 {
-		return false
-	}
-
-	mainType, subType := ps[0], ps[1]
-
-	if mainType == "text" {
-		return true
-	}
-
-	if mainType == "application" {
-		return subType == "json" ||
-			subType == "xml" ||
-			strings.HasSuffix(subType, "+xml") ||
-			strings.HasSuffix(subType, "+json")
-	}
-
-	if mainType == "image" {
-		return strings.HasSuffix(subType, "+xml")
-	}
-
-	return false
-}
-
 func ternary(predicate bool, yes, no string) string {
 	if predicate {
 		return yes
 	}
 	return no
-}
-
-//-------------------------------------------------------------------------------------------------
-// pretty printing via transcoding: implemented for JSON and XML only
-
-func PrettyPrint(indent, extension string, out io.Writer, body []byte) error {
-	if len(indent) == 0 {
-		return writePlainText(out, body)
-	}
-	switch extension {
-	case ".json":
-		return writeJSONFile(indent, out, body)
-	case ".xml":
-		return writeXMLFile(indent, out, body)
-	}
-	return writePlainText(out, body)
-}
-
-func writePlainText(out io.Writer, body []byte) error {
-	fn := &httpclient.WithFinalNewline{W: out}
-	_, err := bytes.NewBuffer(body).WriteTo(fn)
-	fn.EnsureFinalNewline()
-	return err
-}
-
-//-------------------------------------------------------------------------------------------------
-
-func writeJSONFile(indent string, out io.Writer, body []byte) error {
-	var data interface{}
-	err := json.NewDecoder(bytes.NewReader(body)).Decode(&data)
-	if err != nil {
-		return writePlainText(out, body)
-	}
-
-	enc := json.NewEncoder(out)
-	enc.SetIndent("", indent)
-	return enc.Encode(data)
-}
-
-//-------------------------------------------------------------------------------------------------
-
-func writeXMLFile(indent string, out io.Writer, body []byte) error {
-	xml := xmlfmt.FormatXML(string(body), "", indent)
-	if strings.HasPrefix(xml, xmlfmt.NL) {
-		xml = xml[len(xmlfmt.NL):]
-	}
-	_, err := fmt.Fprintln(out, xml)
-	return err
-}
-
-func init() {
-	xmlfmt.NL = "\n"
 }
