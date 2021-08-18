@@ -31,7 +31,14 @@ func NewBodyString(s string) *Body { return NewBody([]byte(s)) }
 
 // CopyBody consumes a reader and returns its contents.
 // If the reader is a *Body or a *bytes.Buffer, no copying is needed.
+// Deprecated: use Copy instead.
 func CopyBody(rdr io.Reader) (*Body, error) {
+	return Copy(rdr)
+}
+
+// Copy consumes a reader and returns its contents.
+// If the reader is a *Body or a *bytes.Buffer, no copying is needed.
+func Copy(rdr io.Reader) (*Body, error) {
 	if rdr == nil {
 		return nil, nil
 	}

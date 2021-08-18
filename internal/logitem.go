@@ -24,7 +24,7 @@ func PrepareTheLogItem(req *http.Request, level logging.Level) *logging.LogItem 
 
 	if level == logging.WithHeadersAndBodies {
 		if req.Body != nil && req.Body != http.NoBody {
-			item.Request.Body, _ = body.CopyBody(req.Body)
+			item.Request.Body, _ = body.Copy(req.Body)
 			req.Body = item.Request.Body
 			req.GetBody = func() (io.ReadCloser, error) {
 				return item.Request.Body, nil
@@ -32,7 +32,7 @@ func PrepareTheLogItem(req *http.Request, level logging.Level) *logging.LogItem 
 
 		} else if req.GetBody != nil {
 			rdr, _ := req.GetBody()
-			item.Request.Body, _ = body.CopyBody(rdr)
+			item.Request.Body, _ = body.Copy(rdr)
 		}
 	}
 
@@ -64,7 +64,7 @@ func CompleteTheLogging(res *http.Response, err error, item *logging.LogItem, lo
 	}
 
 	if level == logging.WithHeadersAndBodies {
-		item.Response.Body, err = body.CopyBody(res.Body)
+		item.Response.Body, err = body.Copy(res.Body)
 		if err != nil {
 			log(item)
 			return nil, err

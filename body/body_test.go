@@ -21,7 +21,7 @@ func TestCopyBody(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		rdr, err := CopyBody(c.input)
+		rdr, err := Copy(c.input)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(rdr.Bytes()).To(Equal([]byte(c.expected)))
 		g.Expect(rdr.String()).To(Equal(c.expected))
