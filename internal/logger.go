@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/rickb777/httpclient"
-	bodypkg "github.com/rickb777/httpclient/file"
+	filepkg "github.com/rickb777/httpclient/file"
 	"github.com/rickb777/httpclient/internal/mime"
 	"github.com/spf13/afero"
 	"io"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 )
@@ -47,13 +48,13 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 
 // WriteBodyToFile writes one body (entity) to a file.
 func WriteBodyToFile(out io.Writer, fs afero.Fs, name, extn string, body []byte) {
-	f, err := fs.Create(name + extn)
+	f, err := fs.OpenFile(name+extn, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Fprintf(out, "logger open file error: %s\n", err)
 		return
 	}
 
-	err = bodypkg.PrettyPrint(extn, f, body)
+	err = filepkg.PrettyPrint(extn, f, body)
 	if err != nil {
 		fmt.Fprintf(out, "logger transcode error: %s\n", err)
 		return

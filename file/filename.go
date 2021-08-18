@@ -13,12 +13,21 @@ const (
 	nonWindowsPunct = "_=?&;:.,+@%"
 )
 
-var AllowedPunctuationInFilenames = nonWindowsPunct
+var (
+	// AllowedPunctuationInFilenames lists the punctuation characters that are tolerated
+	// when converting URLs to filenames. This is initialised to a string appropriate for
+	// the current OS.
+	AllowedPunctuationInFilenames = nonWindowsPunct
+
+	// FilenameTimestampFormat is the time format used for filenames containing a timestamp.
+	FilenameTimestampFormat = "2006-01-02_15-04-05.000"
+)
 
 func init() {
 	reset()
 }
 
+// reset is a seam for testing
 func reset() {
 	AllowedPunctuationInFilenames = nonWindowsPunct
 	if os.PathSeparator == '\\' {
@@ -27,7 +36,7 @@ func reset() {
 }
 
 func FilenameTimestamp(t time.Time) string {
-	return strings.Replace(t.Format("2006-01-02_15-04-05.000"), ".", "-", 1)
+	return strings.Replace(t.Format(FilenameTimestampFormat), ".", "-", 1)
 }
 
 func UrlToFilename(path string) string {
@@ -60,6 +69,7 @@ func UrlToFilename(path string) string {
 	return buf.String()
 }
 
+// Hostname gets the "Host" header and removes any disallowed punctuation characters.
 func Hostname(hdrs http.Header) string {
 	host := UrlToFilename(hdrs.Get("Host"))
 	if host != "" {
