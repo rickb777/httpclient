@@ -11,17 +11,29 @@ import (
 )
 
 type hh struct {
-	inner httpclient.HttpClient
+	inner    httpclient.HttpClient
+	metadata map[string]string
 }
 
 // Wrap creates an automatic Host header inserter that wraps the next client.
-func Wrap(next httpclient.HttpClient) httpclient.HttpClient {
-	return &hh{inner: next}
+// It also inserts other headers as specified in the list of key/value pairs.
+func Wrap(next httpclient.HttpClient, headerKeyVals ...string) httpclient.HttpClient {
+	hc := &hh{inner: next}
+	if len(headerKeyVals) > 1 {
+		hc.metadata = make(map[string]string)
+		for i := 1; i < len(headerKeyVals); i += 2 {
+			hc.metadata[headerKeyVals[i-1]] = headerKeyVals[i]
+		}
+	}
+	return hc
 }
 
 func (hh *hh) Do(req *http.Request) (*http.Response, error) {
 	if req.Header.Get("Host") == "" {
 		req.Header.Set("Host", req.URL.Host)
+	}
+	for h, v := range hh.metadata {
+		req.Header.Set(h, v)
 	}
 	return hh.inner.Do(req)
 }

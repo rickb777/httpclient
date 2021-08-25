@@ -24,6 +24,7 @@ func TestHostHeader_without_pre_existing_header(t *testing.T) {
 			g.Expect(req.URL.Host).NotTo(gomega.BeEmpty())
 			g.Expect(req.URL.Scheme).NotTo(gomega.BeEmpty())
 		}))
+
 		req := httptest.NewRequest("GET", u, nil)
 		_, err := hh.Do(req)
 		g.Expect(err).NotTo(gomega.HaveOccurred())
@@ -44,11 +45,26 @@ func TestHostHeader_with_pre_existing_header(t *testing.T) {
 			g.Expect(req.URL.Host).NotTo(gomega.BeEmpty())
 			g.Expect(req.URL.Scheme).NotTo(gomega.BeEmpty())
 		}))
+
 		req := httptest.NewRequest("GET", u, nil)
 		req.Header.Set("Host", "target.example.com")
 		_, err := hh.Do(req)
 		g.Expect(err).NotTo(gomega.HaveOccurred())
 	}
+}
+
+func TestHostHeader_inserts_other_headers(t *testing.T) {
+	g := gomega.NewWithT(t)
+
+	hh := Wrap(tester(func(req *http.Request) {
+		g.Expect(req.Header.Get("X-Alpha")).To(gomega.Equal("foo"))
+		g.Expect(req.Header.Get("X-Beta")).To(gomega.Equal("bar"))
+	}), "X-Alpha", "foo", "X-Beta", "bar")
+
+	req := httptest.NewRequest("GET", "https://www.example.com/", nil)
+	req.Header.Set("Host", "target.example.com")
+	_, err := hh.Do(req)
+	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
 type tester func(req *http.Request)
