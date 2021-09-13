@@ -53,7 +53,7 @@ func Copy(rdr io.Reader) (*Body, error) {
 
 	buf := &bytes.Buffer{}
 	_, err := buf.ReadFrom(rdr)
-	if err == io.EOF {
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
 		err = nil
 	}
 	return NewBody(buf.Bytes()), err
