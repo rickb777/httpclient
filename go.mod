@@ -1,6 +1,6 @@
 module github.com/rickb777/httpclient
 
-go 1.16
+go 1.17
 
 require (
 	github.com/cenkalti/backoff/v4 v4.1.1
@@ -13,3 +13,5 @@ require (
 	golang.org/x/sys v0.0.0-20210817190340-bfb29a6856f2 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
+
+require gopkg.in/yaml.v2 v2.4.0 // indirect

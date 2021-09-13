@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/file"
-	"github.com/rickb777/httpclient/internal/mime"
+	"github.com/rickb777/httpclient/mime"
 	"net/http"
 	"net/url"
 	"strings"
