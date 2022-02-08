@@ -26,7 +26,7 @@ func TestRetry_Get_200_error_200(t *testing.T) {
 	_, err := r.Do(httptest.NewRequest("GET", "http://localhost/foobar", nil))
 	g.Expect(err).NotTo(HaveOccurred())
 
-	g.Expect(stub.RemainingOutcomes()).To(Equal(0))
+	g.Expect(stub.RemainingOutcomes()).To(BeEmpty())
 }
 
 func TestRetry_Get_error(t *testing.T) {
@@ -45,7 +45,7 @@ func TestRetry_Get_error(t *testing.T) {
 	_, err := r.Do(httptest.NewRequest("GET", "http://localhost/foo", nil))
 	g.Expect(err).To(Equal(e2))
 
-	g.Expect(stub.RemainingOutcomes()).To(Equal(0))
+	g.Expect(stub.RemainingOutcomes()).To(BeEmpty())
 }
 
 func TestNewExponentialBackOff(t *testing.T) {

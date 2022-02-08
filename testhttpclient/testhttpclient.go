@@ -96,11 +96,18 @@ func (m *MockHttpClient) CapturedBody(i int) string {
 	return m.capturedBodies[i]
 }
 
-func (m *MockHttpClient) RemainingOutcomes() (n int) {
-	for _, o := range m.outcomes {
-		n += len(o)
+func (m *MockHttpClient) RemainingOutcomes() []string {
+	if len(m.outcomes) == 0 {
+		return nil
 	}
-	return n
+
+	info := make([]string, 0, len(m.outcomes))
+	for u, o := range m.outcomes {
+		if len(o) > 0 {
+			info = append(info, fmt.Sprintf("%2d: %s", len(o), u))
+		}
+	}
+	return info
 }
 
 // AddLiteralResponse adds an expected outcome that has a literal HTTP response as provided.
