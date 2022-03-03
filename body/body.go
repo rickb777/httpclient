@@ -36,6 +36,15 @@ func CopyBody(rdr io.Reader) (*Body, error) {
 	return Copy(rdr)
 }
 
+// MustCopy is the same as Copy except that it panics on error.
+func MustCopy(rdr io.Reader) *Body {
+	b, err := Copy(rdr)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // Copy consumes a reader and returns its contents.
 // If the reader is a *Body or a *bytes.Buffer, no copying is needed.
 func Copy(rdr io.Reader) (*Body, error) {

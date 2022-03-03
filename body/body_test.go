@@ -22,8 +22,7 @@ func TestCopy_and_accessors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		rdr, err := Copy(c.input)
-		g.Expect(err).NotTo(HaveOccurred())
+		rdr := MustCopy(c.input)
 		g.Expect(rdr.Bytes()).To(Equal([]byte(c.expected)))
 		g.Expect(rdr.String()).To(Equal(c.expected))
 		if c.input == nil {
@@ -34,7 +33,7 @@ func TestCopy_and_accessors(t *testing.T) {
 
 		if c.input != nil {
 			buf := bytes.Buffer{}
-			_, err = buf.ReadFrom(rdr)
+			_, err := buf.ReadFrom(rdr)
 			g.Expect(err).NotTo(HaveOccurred())
 			g.Expect(buf.String()).To(Equal(c.expected))
 		}
