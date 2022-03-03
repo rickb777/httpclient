@@ -9,14 +9,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestCopyBody(t *testing.T) {
+func TestCopy_and_accessors(t *testing.T) {
 	g := NewGomegaWithT(t)
 	cases := []struct {
-		input    io.ReadCloser
+		input    io.Reader
 		expected string
 	}{
-		{NewBodyString("test string"), "test string"},
-		{ioutil.NopCloser(bytes.NewBufferString("test string")), "test string"},
+		{NewBodyString("test string 1"), "test string 1"},
+		{bytes.NewBufferString("test string 2"), "test string 2"},
+		{ioutil.NopCloser(bytes.NewBufferString("test string 3")), "test string 3"},
 		{nil, ""},
 	}
 
@@ -25,6 +26,11 @@ func TestCopyBody(t *testing.T) {
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(rdr.Bytes()).To(Equal([]byte(c.expected)))
 		g.Expect(rdr.String()).To(Equal(c.expected))
+		if c.input == nil {
+			g.Expect(rdr.Buffer()).To(BeNil())
+		} else {
+			g.Expect(rdr.Buffer().Bytes()).To(Equal([]byte(c.expected)))
+		}
 
 		if c.input != nil {
 			buf := bytes.Buffer{}
@@ -56,6 +62,31 @@ func TestRewind(t *testing.T) {
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(i).To(Equal(4))
 	g.Expect(p).To(Equal([]byte("abcd")))
+}
+
+func TestGetter(t *testing.T) {
+	g := NewGomegaWithT(t)
+	body := NewBodyString("abcdefghijklmnopqrst")
+
+	getter := body.Getter()
+
+	//----- 1st pass -----
+	rdr, err := getter()
+	g.Expect(err).NotTo(HaveOccurred())
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, rdr)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(buf.String()).To(Equal("abcdefghijklmnopqrst"))
+
+	//----- 2nd pass -----
+	rdr, err = getter()
+	g.Expect(err).NotTo(HaveOccurred())
+
+	buf = new(bytes.Buffer)
+	_, err = io.Copy(buf, rdr)
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(buf.String()).To(Equal("abcdefghijklmnopqrst"))
 }
 
 func TestClose(t *testing.T) {

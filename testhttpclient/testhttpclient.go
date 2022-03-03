@@ -1,3 +1,4 @@
+// Package testhttpclient provides a tool for testing code that uses HTTP client(s).
 package testhttpclient
 
 import (
@@ -7,12 +8,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/onsi/gomega"
+	bodypkg "github.com/rickb777/httpclient/body"
 )
 
 // TestingT is a simple *testing.T interface wrapper
@@ -48,13 +49,13 @@ func MockXMLResponse(code int, body interface{}) *http.Response {
 	return MockResponse(code, s.Bytes(), ContentTypeApplicationXML)
 }
 
-// MockResponse builds a http.Response.
+// MockResponse builds a http.Response. If contentType blank it is ignored.
 func MockResponse(code int, body []byte, contentType string) *http.Response {
 	body = withTrailingNewline(body)
 	res := &http.Response{
 		StatusCode: code,
 		Header:     make(http.Header),
-		Body:       io.NopCloser(bytes.NewBuffer(body)),
+		Body:       bodypkg.NewBody(body),
 	}
 
 	res.Header.Set("Content-Length", strconv.Itoa(len(body)))
@@ -64,17 +65,21 @@ func MockResponse(code int, body []byte, contentType string) *http.Response {
 	return res
 }
 
+//-------------------------------------------------------------------------------------------------
+
 // Outcome defines a matching rule for an expected HTTP request outcome.
 type Outcome struct {
 	Response *http.Response
 	Err      error
 }
 
+//-------------------------------------------------------------------------------------------------
+
 // MockHttpClient is a HttpClient that holds some stubbed outcomes.
 type MockHttpClient struct {
 	t                TestingT
 	CapturedRequests []*http.Request
-	capturedBodies   []string
+	capturedBodies   []*bodypkg.Body
 	outcomes         map[string][]Outcome
 }
 
@@ -82,20 +87,28 @@ func New(t TestingT) *MockHttpClient {
 	return &MockHttpClient{t: t, outcomes: make(map[string][]Outcome)}
 }
 
+// Reset deletes all outcomes and captured responses.
 func (m *MockHttpClient) Reset() {
 	m.CapturedRequests = nil
+	m.capturedBodies = nil
 	m.outcomes = make(map[string][]Outcome)
 }
 
-func (m *MockHttpClient) CapturedBody(i int) string {
-	if len(m.capturedBodies) == 0 {
-		for _, req := range m.CapturedRequests {
-			m.capturedBodies = append(m.capturedBodies, ReadString(req.Body))
+// CapturedBody gets the request body from the i'th request.
+func (m *MockHttpClient) CapturedBody(i int) *bodypkg.Body {
+	n := len(m.capturedBodies)
+	if n < len(m.CapturedRequests) {
+		for _, req := range m.CapturedRequests[n:] {
+			body, err := bodypkg.Copy(req.Body)
+			must(err)
+			m.capturedBodies = append(m.capturedBodies, body)
 		}
 	}
 	return m.capturedBodies[i]
 }
 
+// RemainingOutcomes describes the remaining outcomes. Typically, this should be empty
+// at the end of a test (otherwise there might be a setup error).
 func (m *MockHttpClient) RemainingOutcomes() []string {
 	if len(m.outcomes) == 0 {
 		return nil
@@ -132,12 +145,12 @@ func (m *MockHttpClient) AddLiteralByteResponse(method, url string, wholeRespons
 	return m.AddResponse(method, url, res)
 }
 
-// AddResponse adds an expected outcome with a response or an error. If the error is not nil, the response will
-// be ignored (so it should be nil).
+// AddResponse adds an expected outcome that returns a response.
 func (m *MockHttpClient) AddResponse(method, url string, response *http.Response) *MockHttpClient {
 	return m.AddOutcome(method, url, Outcome{Response: response})
 }
 
+// AddError adds an expected outcome that returns an error instead of a response.
 func (m *MockHttpClient) AddError(method, url string, err error) *MockHttpClient {
 	return m.AddOutcome(method, url, Outcome{Err: err})
 }
@@ -149,10 +162,16 @@ func (m *MockHttpClient) AddOutcome(method, url string, outcome Outcome) *MockHt
 	return m
 }
 
+//-------------------------------------------------------------------------------------------------
+
+// Do is a pluggable method that implements standard library behaviour using stubbed behaviours.
+// See httpclient.HttpClient. This uses RoundTrip.
 func (m *MockHttpClient) Do(req *http.Request) (*http.Response, error) {
 	return m.RoundTrip(req)
 }
 
+// RoundTrip is a pluggable method that implements standard library http.RoundTripper behaviour
+// using stubbed behaviours.
 func (m *MockHttpClient) RoundTrip(req *http.Request) (*http.Response, error) {
 	m.CapturedRequests = append(m.CapturedRequests, req.Clone(context.Background()))
 
@@ -185,14 +204,6 @@ func withTrailingNewline(body []byte) []byte {
 		body = append(body, '\n')
 	}
 	return body
-}
-
-// TODO possibly remove this - see rest.ReadString
-
-func ReadString(r io.Reader) string {
-	buf := &bytes.Buffer{}
-	buf.ReadFrom(r)
-	return buf.String()
 }
 
 func must(err error) {

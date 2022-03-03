@@ -107,6 +107,7 @@ func (r *Body) Close() error {
 // times as used by http.Request.GetBody.
 func (r *Body) Getter() func() (io.ReadCloser, error) {
 	return func() (io.ReadCloser, error) {
+		r.Rewind()
 		return r, nil
 	}
 }
