@@ -73,10 +73,7 @@ func Copy(rdr io.Reader) (*Body, error) {
 // If the buffer has no data to return, err is io.EOF (unless len(p) is zero);
 // otherwise it is nil.
 func (r *Body) Read(p []byte) (n int, err error) {
-	if r == nil {
-		return
-	}
-	if r.i >= int64(len(r.b)) {
+	if r == nil || r.i >= int64(len(r.b)) {
 		return 0, io.EOF
 	}
 	n = copy(p, r.b[r.i:])

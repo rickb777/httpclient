@@ -65,7 +65,7 @@ func TestRewind(t *testing.T) {
 	body = nil
 	p = make([]byte, 4)
 	i, err = body.Read(p)
-	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(err).To(HaveOccurred())
 	g.Expect(i).To(Equal(0))
 	g.Expect(p).To(Equal([]byte{0, 0, 0, 0})) // unchanged
 }
