@@ -68,15 +68,18 @@ func Copy(rdr io.Reader) (*Body, error) {
 	return NewBody(buf.Bytes()), err
 }
 
-// Read reads the next len(p) bytes from the buffer or until the buffer
-// is drained. The return value n is the number of bytes read. If the
-// buffer has no data to return, err is io.EOF (unless len(p) is zero);
+// Read reads up to len(p) bytes into p the buffer, stopping if the buffer
+// is drained or p is full. The return value n is the number of bytes read.
+// If the buffer has no data to return, err is io.EOF (unless len(p) is zero);
 // otherwise it is nil.
-func (r *Body) Read(b []byte) (n int, err error) {
+func (r *Body) Read(p []byte) (n int, err error) {
+	if r == nil {
+		return
+	}
 	if r.i >= int64(len(r.b)) {
 		return 0, io.EOF
 	}
-	n = copy(b, r.b[r.i:])
+	n = copy(p, r.b[r.i:])
 	r.i += int64(n)
 	return
 }
