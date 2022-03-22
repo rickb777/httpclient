@@ -54,8 +54,14 @@ func Copy(rdr io.Reader) (*Body, error) {
 
 	switch v := rdr.(type) {
 	case *bytes.Buffer:
+		if v == nil {
+			return nil, nil
+		}
 		return NewBody(v.Bytes()), nil
 	case *Body:
+		if v == nil {
+			return nil, nil
+		}
 		v.i = 0
 		return v, nil
 	}

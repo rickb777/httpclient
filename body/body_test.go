@@ -11,21 +11,27 @@ import (
 
 func TestCopy_and_accessors(t *testing.T) {
 	g := NewGomegaWithT(t)
+
 	cases := []struct {
 		input    io.Reader
 		expected string
+		isNil    bool
 	}{
-		{NewBodyString("test string 1"), "test string 1"},
-		{bytes.NewBufferString("test string 2"), "test string 2"},
-		{ioutil.NopCloser(bytes.NewBufferString("test string 3")), "test string 3"},
-		{nil, ""},
+		// with content
+		{input: NewBodyString("test string 1"), expected: "test string 1", isNil: false},
+		{input: bytes.NewBufferString("test string 2"), expected: "test string 2", isNil: false},
+		{input: ioutil.NopCloser(bytes.NewBufferString("test string 3")), expected: "test string 3", isNil: false},
+		// various nil values
+		{input: nil, expected: "", isNil: true},
+		{input: (*bytes.Buffer)(nil), expected: "", isNil: true},
+		{input: (*Body)(nil), expected: "", isNil: true},
 	}
 
 	for _, c := range cases {
 		rdr := MustCopy(c.input)
 		g.Expect(rdr.Bytes()).To(Equal([]byte(c.expected)))
 		g.Expect(rdr.String()).To(Equal(c.expected))
-		if c.input == nil {
+		if c.isNil {
 			g.Expect(rdr.Buffer()).To(BeNil())
 		} else {
 			g.Expect(rdr.Buffer().Bytes()).To(Equal([]byte(c.expected)))
