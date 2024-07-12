@@ -95,10 +95,9 @@ func (i Level) IsValid() bool {
 //
 // Usage Example
 //
-//    v := new(Level)
-//    err := v.Parse(s)
-//    ...  etc
-//
+//	v := new(Level)
+//	err := v.Parse(s)
+//	...  etc
 func (v *Level) Parse(s string) error {
 	return v.parse(s, levelMarshalTextRep)
 }

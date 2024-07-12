@@ -126,12 +126,11 @@ func (m *MockHttpClient) RemainingOutcomes() []string {
 // AddLiteralResponse adds an expected outcome that has a literal HTTP response as provided.
 // An example might be
 //
-//    HTTP/1.1 200 OK
-//    Content-Type: application/json; charset=UTF-8
-//    Content-Length: 18
+//	HTTP/1.1 200 OK
+//	Content-Type: application/json; charset=UTF-8
+//	Content-Length: 18
 //
-//    {"A":"foo","B":7}
-//
+//	{"A":"foo","B":7}
 func (m *MockHttpClient) AddLiteralResponse(method, url string, wholeResponse string) *MockHttpClient {
 	return m.AddLiteralByteResponse(method, url, []byte(wholeResponse))
 }

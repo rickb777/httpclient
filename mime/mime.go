@@ -127,11 +127,11 @@ func ParseMediaType(v string) (mediatype string, params map[string]string, err e
 // system's MIME-info database or mime.types file(s) if available under one or
 // more of these names:
 //
-//   /usr/local/share/mime/globs2
-//   /usr/share/mime/globs2
-//   /etc/mime.types
-//   /etc/apache2/mime.types
-//   /etc/apache/mime.types
+//	/usr/local/share/mime/globs2
+//	/usr/share/mime/globs2
+//	/etc/mime.types
+//	/etc/apache2/mime.types
+//	/etc/apache/mime.types
 //
 // On Windows, MIME types are extracted from the registry.
 //
