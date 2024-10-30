@@ -7,6 +7,7 @@ import (
 	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/spf13/afero"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -380,4 +381,115 @@ see 2021-04-01_10-11-12-001_PUT_a_b_c_req.json
 <-- no headers
 ---
 `), buf.String())
+}
+
+func BenchmarkLogWriter_terse(b *testing.B) {
+	u, _ := url.Parse("http://somewhere.com/a/b/c")
+
+	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
+	reqHeader.Set("Accept", "application/json")
+	reqHeader.Set("Cookie", "a=123")
+	reqHeader.Add("Cookie", "b=4556")
+
+	resHeader := make(http.Header)
+	resHeader.Set("Content-Type", "application/json; charset=UTF-8")
+	resHeader.Set("Content-Length", "18")
+
+	log := LogWriter(io.Discard, afero.NewMemMapFs())
+
+	item := logging.LogItem{
+		Method:     "GET",
+		URL:        u,
+		StatusCode: 200,
+		Request:    logging.LogContent{Header: reqHeader},
+		Response:   logging.LogContent{Header: resHeader},
+		Err:        nil,
+		Start:      t0,
+		Duration:   time.Millisecond,
+	}
+
+	b.Run("off", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.Off
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
+
+	b.Run("summary", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.Summary
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
+
+	b.Run("withHeaders", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.WithHeaders
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
+}
+
+func BenchmarkLogWriter_long_response(b *testing.B) {
+	u, _ := url.Parse("http://somewhere.com/a/b/c")
+
+	reqHeader := make(http.Header)
+	reqHeader.Set("Host", "somewhere.com")
+	reqHeader.Set("Accept", "application/json")
+	reqHeader.Set("Cookie", "a=123")
+	reqHeader.Add("Cookie", "b=4556")
+
+	resHeader := make(http.Header)
+	resHeader.Set("Content-Type", "application/json; charset=UTF-8")
+	resHeader.Set("Content-Length", "18")
+
+	log := LogWriter(io.Discard, afero.NewMemMapFs())
+
+	item := logging.LogItem{
+		Method:     "GET",
+		URL:        u,
+		StatusCode: 200,
+		Request:    logging.LogContent{Header: reqHeader},
+		Response: logging.LogContent{
+			Header: resHeader,
+			Body:   body.NewBodyString(longJSON),
+		},
+		Err:      nil,
+		Start:    t0,
+		Duration: time.Millisecond,
+	}
+
+	b.Run("off", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.Off
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
+
+	b.Run("summary", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.Summary
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
+
+	b.Run("withHeaders", func(b *testing.B) {
+		i1 := item
+		i1.Level = logging.WithHeaders
+
+		for i := 0; i < b.N; i++ {
+			log(&i1)
+		}
+	})
 }

@@ -53,7 +53,6 @@ func LogWriter(lgr zerolog.Logger, fs afero.Fs) logger.Logger {
 		}
 
 		// verbose info
-		out := &strings.Builder{} // should this be pooled?
 		switch item.Level {
 		case logging.WithHeaders:
 			ze = printPart(ze, fs, item.Request.Header, true, "", nil, logger.LongBodyThreshold)
@@ -65,7 +64,7 @@ func LogWriter(lgr zerolog.Logger, fs afero.Fs) logger.Logger {
 			ze = printPart(ze, fs, item.Response.Header, false, file, item.Response.Body.Bytes(), logger.LongBodyThreshold)
 		}
 
-		ze.Msg(out.String())
+		ze.Send()
 	}
 }
 

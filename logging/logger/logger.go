@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	. "github.com/rickb777/httpclient/internal"
+	"github.com/rickb777/httpclient/internal/builderpool"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/spf13/afero"
 	"io"
 	"log"
-	"strings"
 	"sync"
 	"time"
 )
@@ -58,7 +58,8 @@ func LogWriter(out io.Writer, fs afero.Fs) Logger {
 	}
 
 	return func(item *logging.LogItem) {
-		b := &strings.Builder{}
+		b := pool.Get()
+		defer pool.Release(b)
 
 		// basic info
 		if item.Err != nil {
@@ -93,6 +94,8 @@ func handleErr(err error) {
 		log.Printf("Warning: LogWriter %s.", err.Error())
 	}
 }
+
+var pool = builderpool.NewB()
 
 //-------------------------------------------------------------------------------------------------
 
