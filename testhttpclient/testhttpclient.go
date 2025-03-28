@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	bodypkg "github.com/rickb777/httpclient/body"
 )
 
@@ -77,13 +77,13 @@ type Outcome struct {
 
 // MockHttpClient is a HttpClient that holds some stubbed outcomes.
 type MockHttpClient struct {
-	t                TestingT
+	t                expect.Tester
 	CapturedRequests []*http.Request
 	capturedBodies   []*bodypkg.Body
 	outcomes         map[string][]Outcome
 }
 
-func New(t TestingT) *MockHttpClient {
+func New(t expect.Tester) *MockHttpClient {
 	return &MockHttpClient{t: t, outcomes: make(map[string][]Outcome)}
 }
 
@@ -136,10 +136,9 @@ func (m *MockHttpClient) AddLiteralResponse(method, url string, wholeResponse st
 }
 
 func (m *MockHttpClient) AddLiteralByteResponse(method, url string, wholeResponse []byte) *MockHttpClient {
-	g := gomega.NewWithT(m.t)
 	rdr := bufio.NewReader(bytes.NewBuffer(withTrailingNewline(wholeResponse)))
 	res, err := http.ReadResponse(rdr, nil)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(m.t)
 
 	return m.AddResponse(method, url, res)
 }

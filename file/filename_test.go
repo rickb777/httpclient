@@ -1,12 +1,11 @@
 package file
 
 import (
-	"github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"testing"
 )
 
 func TestUrlToFilename(t *testing.T) {
-	g := gomega.NewWithT(t)
 	defer reset()
 
 	cases := map[string]string{
@@ -24,6 +23,6 @@ func TestUrlToFilename(t *testing.T) {
 			AllowedPunctuationInFilenames = windowsPunct
 		}
 		act := UrlToFilename(in[2:])
-		g.Expect(act).To(gomega.Equal(exp), in)
+		expect.String(act).Info(in).ToBe(t, exp)
 	}
 }

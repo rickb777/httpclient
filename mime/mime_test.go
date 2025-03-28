@@ -1,13 +1,11 @@
 package mime
 
 import (
-	"github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"testing"
 )
 
 func TestFileExtension(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	cases := map[string]string{
 		"text/plain":               ".txt",
 		"text/html":                ".html",
@@ -19,13 +17,11 @@ func TestFileExtension(t *testing.T) {
 	}
 	for ct, exp := range cases {
 		e := FileExtension(ct)
-		g.Expect(e).To(gomega.Equal(exp), ct)
+		expect.String(e).Info(ct).ToBe(t, exp)
 	}
 }
 
 func TestIsTextual(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	t.Run("true", func(t *testing.T) {
 		cases := []string{
 			"text/plain", "text/html",
@@ -38,7 +34,7 @@ func TestIsTextual(t *testing.T) {
 		}
 		for _, c := range cases {
 			r := IsTextual(c)
-			g.Expect(r).To(gomega.BeTrue())
+			expect.Bool(r).ToBeTrue(t)
 		}
 	})
 
@@ -52,7 +48,7 @@ func TestIsTextual(t *testing.T) {
 		}
 		for _, c := range cases {
 			r := IsTextual(c)
-			g.Expect(r).To(gomega.BeFalse())
+			expect.Bool(r).ToBeFalse(t)
 		}
 	})
 }

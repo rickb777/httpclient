@@ -2,16 +2,13 @@ package body
 
 import (
 	"bytes"
+	"github.com/rickb777/expect"
 	"io"
 	"io/ioutil"
 	"testing"
-
-	. "github.com/onsi/gomega"
 )
 
 func TestCopy_and_accessors(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	cases := []struct {
 		input    io.Reader
 		expected string
@@ -29,86 +26,82 @@ func TestCopy_and_accessors(t *testing.T) {
 
 	for _, c := range cases {
 		rdr := MustCopy(c.input)
-		g.Expect(rdr.Bytes()).To(Equal([]byte(c.expected)))
-		g.Expect(rdr.String()).To(Equal(c.expected))
+		expect.String(rdr.Bytes()).ToEqual(t, c.expected)
+		expect.String(rdr.String()).ToBe(t, c.expected)
 		if c.isNil {
-			g.Expect(rdr.Buffer()).To(BeNil())
+			expect.Any(rdr.Buffer()).ToBeNil(t)
 		} else {
-			g.Expect(rdr.Buffer().Bytes()).To(Equal([]byte(c.expected)))
+			expect.String(rdr.Buffer().Bytes()).ToEqual(t, c.expected)
 		}
 
 		if c.input != nil {
 			buf := bytes.Buffer{}
 			_, err := buf.ReadFrom(rdr)
-			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(buf.String()).To(Equal(c.expected))
+			expect.Error(err).Not().ToHaveOccurred(t)
+			expect.String(buf.String()).ToBe(t, c.expected)
 		}
 	}
 }
 
 func TestRewind(t *testing.T) {
-	g := NewGomegaWithT(t)
 	body := NewBodyString("abcdefghijklmnopqrst")
 
 	p := make([]byte, 4)
 	i, err := body.Read(p)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(i).To(Equal(4))
-	g.Expect(p).To(Equal([]byte("abcd")))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(i).ToBe(t, 4)
+	expect.String(p).ToEqual(t, "abcd")
 
 	i, err = body.Read(p)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(i).To(Equal(4))
-	g.Expect(p).To(Equal([]byte("efgh")))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(i).ToBe(t, 4)
+	expect.String(p).ToEqual(t, "efgh")
 
 	body = body.Rewind()
 
 	i, err = body.Read(p)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(i).To(Equal(4))
-	g.Expect(p).To(Equal([]byte("abcd")))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(i).ToBe(t, 4)
+	expect.String(p).ToEqual(t, "abcd")
 
 	body = nil
 	p = make([]byte, 4)
 	i, err = body.Read(p)
-	g.Expect(err).To(HaveOccurred())
-	g.Expect(i).To(Equal(0))
-	g.Expect(p).To(Equal([]byte{0, 0, 0, 0})) // unchanged
+	expect.Error(err).ToHaveOccurred(t)
+	expect.Number(i).ToBe(t, 0)
+	expect.Slice(p).ToBe(t, []byte{0, 0, 0, 0}...) // unchanged
 }
 
 func TestGetter(t *testing.T) {
-	g := NewGomegaWithT(t)
 	body := NewBodyString("abcdefghijklmnopqrst")
 
 	getter := body.Getter()
 
 	//----- 1st pass -----
 	rdr, err := getter()
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, rdr)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(buf.String()).To(Equal("abcdefghijklmnopqrst"))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.String(buf.String()).ToBe(t, "abcdefghijklmnopqrst")
 
 	//----- 2nd pass -----
 	rdr, err = getter()
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
 	buf = new(bytes.Buffer)
 	_, err = io.Copy(buf, rdr)
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(buf.String()).To(Equal("abcdefghijklmnopqrst"))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.String(buf.String()).ToBe(t, "abcdefghijklmnopqrst")
 }
 
 func TestClose(t *testing.T) {
-	g := NewGomegaWithT(t)
-	// Given...
 	re := NewBodyString("test string")
 
 	// When...
 	err := re.Close()
 
 	// Then...
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 }

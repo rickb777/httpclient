@@ -2,7 +2,7 @@ package retry_test
 
 import (
 	"errors"
-	. "github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"github.com/rickb777/httpclient/retry"
 	"github.com/rickb777/httpclient/testhttpclient"
 	"github.com/rs/zerolog"
@@ -15,8 +15,6 @@ import (
 )
 
 func TestRetry_Get_200_error_200(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	lgr := zerolog.New(ioutil.Discard)
 	stub := testhttpclient.New(t).
 		AddResponse("GET", "http://localhost/foobar", testhttpclient.MockResponse(200, []byte("OK"), ""))
@@ -24,14 +22,12 @@ func TestRetry_Get_200_error_200(t *testing.T) {
 	r := retry.New(stub, retry.RetryConfig{}, lgr)
 
 	_, err := r.Do(httptest.NewRequest("GET", "http://localhost/foobar", nil))
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 
-	g.Expect(stub.RemainingOutcomes()).To(BeEmpty())
+	expect.Slice(stub.RemainingOutcomes()).ToBeEmpty(t)
 }
 
 func TestRetry_Get_error(t *testing.T) {
-	g := NewGomegaWithT(t)
-
 	lgr := zerolog.New(ioutil.Discard)
 	e1 := &net.OpError{Op: "dial", Err: errors.New("bang2")}
 	e2 := errors.New("bang1")
@@ -43,13 +39,12 @@ func TestRetry_Get_error(t *testing.T) {
 	r := retry.New(stub, retry.RetryConfig{}, lgr)
 
 	_, err := r.Do(httptest.NewRequest("GET", "http://localhost/foo", nil))
-	g.Expect(err).To(Equal(e2))
+	expect.Any(err).ToBe(t, e2)
 
-	g.Expect(stub.RemainingOutcomes()).To(BeEmpty())
+	expect.Slice(stub.RemainingOutcomes()).ToBeEmpty(t)
 }
 
 func TestNewExponentialBackOff(t *testing.T) {
-	g := NewGomegaWithT(t)
 	count := 0
 	lgrBuf := &strings.Builder{}
 	lgr := zerolog.New(lgrBuf)
@@ -67,11 +62,11 @@ func TestNewExponentialBackOff(t *testing.T) {
 			return nil
 		})
 
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(count).To(Equal(2))
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(count).ToBe(t, 2)
 	msg := lgrBuf.String()
-	g.Expect(msg).To(ContainSubstring(`"level":"warn"`))
-	g.Expect(msg).To(ContainSubstring(`"target":"TGT"`))
-	g.Expect(msg).To(ContainSubstring(`"error":"dial: bang"`))
-	g.Expect(msg).To(ContainSubstring(`"message":"Failed to open connection"`))
+	expect.String(msg).ToContain(t, `"level":"warn"`)
+	expect.String(msg).ToContain(t, `"target":"TGT"`)
+	expect.String(msg).ToContain(t, `"error":"dial: bang"`)
+	expect.String(msg).ToContain(t, `"message":"Failed to open connection"`)
 }

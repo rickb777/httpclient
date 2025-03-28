@@ -3,7 +3,7 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	"github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/spf13/afero"
@@ -19,8 +19,6 @@ const longJSON = `{"alpha":"some text","beta":"some more text","gamma":"this mig
 var t0 = time.Date(2021, 04, 01, 10, 11, 12, 1000000, time.UTC)
 
 func TestLogWriter_typical_GET_terse(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -46,12 +44,10 @@ func TestLogWriter_typical_GET_terse(t *testing.T) {
 		Level:      0,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal("10:11:12 GET      http://somewhere.com/a/b/c 200 1ms\n"), buf.String())
+	expect.String(buf.String()).ToBe(t, "10:11:12 GET      http://somewhere.com/a/b/c 200 1ms\n")
 }
 
 func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -82,7 +78,7 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/json
 --> Cookie:          a=123
@@ -92,12 +88,10 @@ func TestLogWriter_typical_GET_JSON_short_content(t *testing.T) {
 <-- Content-Type:    application/json; charset=UTF-8
 {"A":"foo","B":7}
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -128,7 +122,7 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/json
 --> Cookie:          a=123
@@ -138,12 +132,10 @@ func TestLogWriter_typical_GET_JSON_long_content(t *testing.T) {
 <-- Content-Type:    application/json; charset=UTF-8
 see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.json
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -177,7 +169,7 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          text/*
 --> Cookie:          a=123
@@ -187,12 +179,10 @@ func TestLogWriter_typical_GET_text_long_content(t *testing.T) {
 <-- Content-Type:    text/plain; charset=UTF-8
 see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.txt
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c?foo=1")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -227,7 +217,7 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 GET      http://somewhere.com/a/b/c?foo=1 200 1ms
 --> Accept:          application/xml
 --> Cookie:          a=123
@@ -237,12 +227,10 @@ func TestLogWriter_typical_GET_XML_long_content(t *testing.T) {
 <-- Content-Type:    application/xml; charset=UTF-8
 see 2021-04-01_10-11-12-001_GET_somewhere.com_a_b_c_resp.xml
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_GET_binary(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -271,7 +259,7 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 GET      http://somewhere.com/a/b/c 200 1ms
 --> Accept:          application/*
 --> Host:            somewhere.com
@@ -279,12 +267,10 @@ func TestLogWriter_typical_GET_binary(t *testing.T) {
 <-- Content-Type:    application/octet-stream
 <-- binary content [3]byte
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Host", "somewhere.com")
@@ -307,19 +293,17 @@ func TestLogWriter_typical_PUT_headers_only_with_error(t *testing.T) {
 		Err:      fmt.Errorf("Bang!"),
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 PUT      http://somewhere.com/a/b/c 0 123µs Bang!
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
 --> Host:            somewhere.com
 <-- no headers
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_PUT_short_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
@@ -340,19 +324,17 @@ func TestLogWriter_typical_PUT_short_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 PUT      http://somewhere.com/a/b/c 204 1ms
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
 {"A":"foo","B":7}
 <-- no headers
 ---
-`), buf.String())
+`)
 }
 
 func TestLogWriter_typical_PUT_long_content(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	u, _ := url.Parse("http://somewhere.com/a/b/c")
 	reqHeader := make(http.Header)
 	reqHeader.Set("Content-Type", "application/json; charset=UTF-8")
@@ -373,14 +355,14 @@ func TestLogWriter_typical_PUT_long_content(t *testing.T) {
 		Level:    logging.WithHeadersAndBodies,
 	})
 
-	g.Expect(buf.String()).To(gomega.Equal(
+	expect.String(buf.String()).ToBe(t,
 		`10:11:12 PUT      http://somewhere.com/a/b/c 204 1ms
 --> Content-Length:  18
 --> Content-Type:    application/json; charset=UTF-8
 see 2021-04-01_10-11-12-001_PUT_a_b_c_req.json
 <-- no headers
 ---
-`), buf.String())
+`)
 }
 
 func BenchmarkLogWriter_terse(b *testing.B) {

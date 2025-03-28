@@ -1,15 +1,13 @@
 package hostheader
 
 import (
-	"github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 func TestHostHeader_without_pre_existing_header(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	testcases := map[string]string{
 		"https://www.example.com/":      "www.example.com",
 		"https://www.example.com:3456/": "www.example.com:3456",
@@ -20,20 +18,18 @@ func TestHostHeader_without_pre_existing_header(t *testing.T) {
 
 	for u, expected := range testcases {
 		hh := Wrap(tester(func(req *http.Request) {
-			g.Expect(req.Header.Get("Host")).To(gomega.Equal(expected))
-			g.Expect(req.URL.Host).NotTo(gomega.BeEmpty())
-			g.Expect(req.URL.Scheme).NotTo(gomega.BeEmpty())
+			expect.String(req.Header.Get("Host")).ToBe(t, expected)
+			expect.String(req.URL.Host).Not().ToBeEmpty(t)
+			expect.String(req.URL.Scheme).Not().ToBeEmpty(t)
 		}))
 
 		req := httptest.NewRequest("GET", u, nil)
 		_, err := hh.Do(req)
-		g.Expect(err).NotTo(gomega.HaveOccurred())
+		expect.Error(err).Not().ToHaveOccurred(t)
 	}
 }
 
 func TestHostHeader_with_pre_existing_header(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	testcases := map[string]string{
 		"https://www.example.com/": "target.example.com",
 		"http://127.0.0.1:8080/":   "target.example.com",
@@ -41,30 +37,28 @@ func TestHostHeader_with_pre_existing_header(t *testing.T) {
 
 	for u, expected := range testcases {
 		hh := Wrap(tester(func(req *http.Request) {
-			g.Expect(req.Header.Get("Host")).To(gomega.Equal(expected))
-			g.Expect(req.URL.Host).NotTo(gomega.BeEmpty())
-			g.Expect(req.URL.Scheme).NotTo(gomega.BeEmpty())
+			expect.String(req.Header.Get("Host")).ToBe(t, expected)
+			expect.String(req.URL.Host).Not().ToBeEmpty(t)
+			expect.String(req.URL.Scheme).Not().ToBeEmpty(t)
 		}))
 
 		req := httptest.NewRequest("GET", u, nil)
 		req.Header.Set("Host", "target.example.com")
 		_, err := hh.Do(req)
-		g.Expect(err).NotTo(gomega.HaveOccurred())
+		expect.Error(err).Not().ToHaveOccurred(t)
 	}
 }
 
 func TestHostHeader_inserts_other_headers(t *testing.T) {
-	g := gomega.NewWithT(t)
-
 	hh := Wrap(tester(func(req *http.Request) {
-		g.Expect(req.Header.Get("X-Alpha")).To(gomega.Equal("foo"))
-		g.Expect(req.Header.Get("X-Beta")).To(gomega.Equal("bar"))
+		expect.String(req.Header.Get("X-Alpha")).ToBe(t, "foo")
+		expect.String(req.Header.Get("X-Beta")).ToBe(t, "bar")
 	}), "X-Alpha", "foo", "X-Beta", "bar")
 
 	req := httptest.NewRequest("GET", "https://www.example.com/", nil)
 	req.Header.Set("Host", "target.example.com")
 	_, err := hh.Do(req)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	expect.Error(err).Not().ToHaveOccurred(t)
 }
 
 type tester func(req *http.Request)
