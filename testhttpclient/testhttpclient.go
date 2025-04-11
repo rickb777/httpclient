@@ -183,7 +183,7 @@ func (m *MockHttpClient) RoundTrip(req *http.Request) (*http.Response, error) {
 				keys = append(keys, fmt.Sprintf("%2d %s", len(v), k))
 			}
 		}
-		m.t.Fatalf("Missing outcome for %s\nRemaining:\n%s", match, strings.Join(keys, "\n"))
+		m.t.Fatal(fmt.Sprintf("Missing outcome for %s\nRemaining:\n%s", match, strings.Join(keys, "\n")))
 	}
 
 	o := outcomes[0]
