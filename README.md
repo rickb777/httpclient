@@ -8,4 +8,9 @@
 
 Wrappers for HTTP client operations
 
- * Logging requests via a pluggable logger
+ * Automatic "Host" header
+ * Logging requests via a pluggable HTTP client logger
+ * Alternative logger at the HTTP Transport layer
+ * Client authentication
+ * Easy HTTP entities (a.k.a. 'bodies')
+ * Configurable request retries

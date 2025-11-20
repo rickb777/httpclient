@@ -14,7 +14,7 @@ import (
 var once sync.Once
 
 // FileExtension returns the extensions known to be associated with the MIME
-// type typ. This is similar to ExtensionsByType, except that these are treated
+// type mimeType. This is similar to ExtensionsByType, except that these are treated
 // as special cases:
 //
 // * "text/plain": ".txt"
