@@ -7,6 +7,7 @@ package body
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 )
 
@@ -74,43 +75,59 @@ func Copy(rdr io.Reader) (*Body, error) {
 	return NewBody(buf.Bytes()), err
 }
 
+// JSON encodes some value as a Body containing JSON data.
+// This is a convenience for creating request entities.
+// Any JSON encoding errors are silently discarded (e.g. from attempting to encode a Go channel).
+func JSON(value any) *Body {
+	b := &bytes.Buffer{}
+	_ = json.NewEncoder(b).Encode(value)
+	return &Body{b: b.Bytes()}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+// String gets the byte slice as a string regardless of the current read position.
+// b may be nil, which yields a blank string.
+func (b *Body) String() string { return string(b.Bytes()) }
+
+// Bytes gets the byte slice regardless of the current read position.
+// b may be nil, in which case a nil slice is returned.
+func (b *Body) Bytes() []byte {
+	if b == nil {
+		return nil
+	}
+	return b.b
+}
+
+// Buffer gets the data in a form that is well suited to http.Request.Body.
+// b may be nil, in which case nil is returned.
+func (b *Body) Buffer() *bytes.Buffer {
+	if b == nil {
+		return nil
+	}
+	return bytes.NewBuffer(b.b)
+}
+
 // Read reads up to len(p) bytes into p the buffer, stopping if the buffer
 // is drained or p is full. The return value n is the number of bytes read.
 // If the buffer has no data to return, err is io.EOF (unless len(p) is zero);
 // otherwise it is nil.
-func (r *Body) Read(p []byte) (n int, err error) {
-	if r == nil || r.i >= int64(len(r.b)) {
+func (b *Body) Read(p []byte) (n int, err error) {
+	if b == nil || b.i >= int64(len(b.b)) {
 		return 0, io.EOF
 	}
-	n = copy(p, r.b[r.i:])
-	r.i += int64(n)
+	n = copy(p, b.b[b.i:])
+	b.i += int64(n)
 	return
 }
 
-// Bytes gets the byte slice regardless of the current read position.
-func (r *Body) Bytes() []byte {
-	if r == nil {
-		return nil
-	}
-	return r.b
-}
-
-// Buffer gets the data in a form that is well suited to http.Request.Body.
-func (r *Body) Buffer() *bytes.Buffer {
-	if r == nil {
-		return nil
-	}
-	return bytes.NewBuffer(r.b)
-}
-
-// String gets the byte slice as a string regardless of the current read position.
-func (r *Body) String() string { return string(r.Bytes()) }
-
 // Rewind rewinds the read pointer in the Body to zero and returns
-// the modified Body.
-func (r *Body) Rewind() *Body {
-	r.i = 0
-	return r
+// the modified Body. See [Body.Read]. b may be nil.
+func (b *Body) Rewind() *Body {
+	if b != nil {
+		b.i = 0
+	}
+	return b
 }
 
 // Close implements the io.Closer interface as a no-op.
@@ -119,10 +136,10 @@ func (r *Body) Close() error {
 }
 
 // Getter returns a function that allows the body to be read multiple
-// times as used by http.Request.GetBody.
-func (r *Body) Getter() func() (io.ReadCloser, error) {
+// times as used by http.Request.GetBody. b may be nil.
+func (b *Body) Getter() func() (io.ReadCloser, error) {
 	return func() (io.ReadCloser, error) {
-		r.Rewind()
-		return r, nil
+		b.Rewind()
+		return b, nil
 	}
 }

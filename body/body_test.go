@@ -2,10 +2,10 @@ package body
 
 import (
 	"bytes"
-	"github.com/rickb777/expect"
 	"io"
-	"io/ioutil"
 	"testing"
+
+	"github.com/rickb777/expect"
 )
 
 func TestCopy_and_accessors(t *testing.T) {
@@ -17,30 +17,36 @@ func TestCopy_and_accessors(t *testing.T) {
 		// with content
 		{input: NewBodyString("test string 1"), expected: "test string 1", isNil: false},
 		{input: bytes.NewBufferString("test string 2"), expected: "test string 2", isNil: false},
-		{input: ioutil.NopCloser(bytes.NewBufferString("test string 3")), expected: "test string 3", isNil: false},
+		{input: io.NopCloser(bytes.NewBufferString("test string 3")), expected: "test string 3", isNil: false},
 		// various nil values
 		{input: nil, expected: "", isNil: true},
 		{input: (*bytes.Buffer)(nil), expected: "", isNil: true},
 		{input: (*Body)(nil), expected: "", isNil: true},
 	}
 
-	for _, c := range cases {
-		rdr := MustCopy(c.input)
-		expect.String(rdr.Bytes()).ToEqual(t, c.expected)
-		expect.String(rdr.String()).ToBe(t, c.expected)
+	for i, c := range cases {
+		rdr1 := MustCopy(c.input)
+		expect.String(rdr1.Bytes()).I(i).ToEqual(t, c.expected)
+		expect.String(rdr1.String()).I(i).ToBe(t, c.expected)
 		if c.isNil {
-			expect.Any(rdr.Buffer()).ToBeNil(t)
+			expect.Any(rdr1.Buffer()).I(i).ToBeNil(t)
 		} else {
-			expect.String(rdr.Buffer().Bytes()).ToEqual(t, c.expected)
+			expect.String(rdr1.Buffer().Bytes()).I(i).ToEqual(t, c.expected)
 		}
 
 		if c.input != nil {
 			buf := bytes.Buffer{}
-			_, err := buf.ReadFrom(rdr)
-			expect.Error(err).Not().ToHaveOccurred(t)
-			expect.String(buf.String()).ToBe(t, c.expected)
+			_, err := buf.ReadFrom(rdr1)
+			expect.Error(err).I(i).Not().ToHaveOccurred(t)
+			expect.String(buf.String()).I(i).ToBe(t, c.expected)
 		}
 	}
+}
+
+func TestCopyBody(t *testing.T) {
+	// deprecated but still supported
+	rdr2, err := CopyBody(bytes.NewBufferString("test string"))
+	expect.String(rdr2.Bytes(), err).ToEqual(t, "test string")
 }
 
 func TestRewind(t *testing.T) {
@@ -94,6 +100,12 @@ func TestGetter(t *testing.T) {
 	_, err = io.Copy(buf, rdr)
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.String(buf.String()).ToBe(t, "abcdefghijklmnopqrst")
+
+	// nil check
+	body = nil
+	g2 := body.Getter()
+	expect.Value(g2).Not().ToBeNil(t)
+	expect.Value(g2()).ToBeNil(t)
 }
 
 func TestClose(t *testing.T) {
@@ -104,4 +116,17 @@ func TestClose(t *testing.T) {
 
 	// Then...
 	expect.Error(err).Not().ToHaveOccurred(t)
+}
+
+func TestNewJSON(t *testing.T) {
+	value := struct {
+		A string
+		B int
+	}{"hello world", 42}
+
+	// When...
+	b := JSON(value)
+
+	// Then...
+	expect.String(b.String()).ToContain(t, `{"A":"hello world","B":42}`)
 }
