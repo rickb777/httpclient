@@ -15,7 +15,6 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/rickb777/enumeration/v4 v4.0.12 // indirect
 	github.com/rickb777/plural v1.4.7 // indirect
 	golang.org/x/sys v0.38.0 // indirect
