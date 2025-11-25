@@ -3,6 +3,7 @@ package zerologger
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rickb777/acceptable/header"
 	bodypkg "github.com/rickb777/httpclient/file"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
@@ -82,15 +83,16 @@ func printPart(ze *zerolog.Event, fs afero.Fs, hdrs http.Header, isRequest bool,
 
 	suffix := ternary(isRequest, "req", "resp")
 	name := fmt.Sprintf("%s_%s", file, suffix)
-	justType := strings.SplitN(contentType, ";", 2)[0]
+	ct := header.ParseContentType(contentType)
+	ct.Params = nil
 	if len(body) > longBodyThreshold {
-		extn := mime.FileExtension(justType)
+		extn := mime.FileExtension(ct.String())
 		if extn != "" {
 			ze = writeBodyToFile(ze, fs, prefix, name, extn, body)
 		}
 		ze = ze.Int(prefix+"_body_len", len(body))
 
-	} else if mime.IsTextual(justType) {
+	} else if ct.IsTextual() {
 		// write short body inline
 		ze = ze.Str(prefix+"_body", strings.Trim(string(body), "\n"))
 

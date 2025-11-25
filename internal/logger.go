@@ -3,15 +3,16 @@ package internal
 import (
 	"bytes"
 	"fmt"
-	"github.com/rickb777/httpclient"
-	filepkg "github.com/rickb777/httpclient/file"
-	"github.com/rickb777/httpclient/mime"
-	"github.com/spf13/afero"
 	"io"
 	"net/http"
 	"os"
 	"sort"
-	"strings"
+
+	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/httpclient"
+	filepkg "github.com/rickb777/httpclient/file"
+	"github.com/rickb777/httpclient/mime"
+	"github.com/spf13/afero"
 )
 
 // PrintPart prints the headers and entity (body) for either the request or the response.
@@ -26,16 +27,17 @@ func PrintPart(out io.Writer, fs afero.Fs, hdrs http.Header, isRequest bool, fil
 
 	suffix := ternary(isRequest, "req", "resp")
 	name := fmt.Sprintf("%s_%s", file, suffix)
-	justType := strings.SplitN(contentType, ";", 2)[0]
+	ct := header.ParseContentType(contentType)
+	ct.Params = nil
 	if len(body) > longBodyThreshold {
-		extn := mime.FileExtension(justType)
+		extn := mime.FileExtension(ct.String())
 		if extn != "" {
 			WriteBodyToFile(out, fs, name, extn, body)
 		} else {
 			fmt.Fprintf(out, "%s binary content [%d]byte\n", prefix, len(body))
 		}
 
-	} else if mime.IsTextual(justType) {
+	} else if ct.IsTextual() {
 		// write short body inline
 		fn := &httpclient.WithFinalNewline{W: out}
 		io.Copy(fn, bytes.NewBuffer(body))

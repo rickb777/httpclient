@@ -6,8 +6,9 @@
 package hostheader
 
 import (
-	"github.com/rickb777/httpclient"
 	"net/http"
+
+	"github.com/rickb777/httpclient"
 )
 
 type hh struct {

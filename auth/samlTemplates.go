@@ -28,7 +28,7 @@ var adfsSamlWsfed *template.Template
 //					</o:UsernameToken>
 //				</o:Security>
 //			</s:Header>
-//			<s:Body>
+//			<s:Response>
 //				<trust:RequestSecurityToken xmlns:trust="http://docs.oasis-open.org/ws-sx/ws-trust/200512">
 //					<wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
 //						<wsa:EndpointReference xmlns:wsa="http://www.w3.org/2005/08/addressing">
@@ -38,7 +38,7 @@ var adfsSamlWsfed *template.Template
 //					<trust:KeyType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Bearer</trust:KeyType>
 //					<trust:RequestType>http://docs.oasis-open.org/ws-sx/ws-trust/200512/Issue</trust:RequestType>
 //				</trust:RequestSecurityToken>
-//			</s:Body>
+//			</s:Response>
 //		</s:Envelope>
 //	`))
 //		if err != nil {
@@ -81,7 +81,7 @@ var onlineSamlWsfed *template.Template
 //					</o:UsernameToken>
 //				</o:Security>
 //			</s:Header>
-//			<s:Body>
+//			<s:Response>
 //				<t:RequestSecurityToken xmlns:t="http://schemas.xmlsoap.org/ws/2005/02/trust">
 //					<wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
 //						<a:EndpointReference>
@@ -92,7 +92,7 @@ var onlineSamlWsfed *template.Template
 //					<t:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</t:RequestType>
 //					<t:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</t:TokenType>
 //				</t:RequestSecurityToken>
-//			</s:Body>
+//			</s:Response>
 //		</s:Envelope>
 //	`))
 //		if err != nil {
@@ -129,7 +129,7 @@ var onlineSamlWsfedAdFs *template.Template
 //				<a:To s:mustUnderstand="1">https://login.microsoftonline.com/extSTS.srf</a:To>
 //				<o:Security s:mustUnderstand="1" xmlns:o="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">{{.Token}}</o:Security>
 //			</s:Header>
-//			<s:Body>
+//			<s:Response>
 //				<t:RequestSecurityToken xmlns:t="http://schemas.xmlsoap.org/ws/2005/02/trust">
 //					<wsp:AppliesTo xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy">
 //						<a:EndpointReference>
@@ -140,7 +140,7 @@ var onlineSamlWsfedAdFs *template.Template
 //					<t:RequestType>http://schemas.xmlsoap.org/ws/2005/02/trust/Issue</t:RequestType>
 //					<t:TokenType>urn:oasis:names:tc:SAML:1.0:assertion</t:TokenType>
 //				</t:RequestSecurityToken>
-//			</s:Body>
+//			</s:Response>
 //		</s:Envelope>
 //	`))
 //		if err != nil {

@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rickb777/acceptable/contenttype"
+	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/expect"
 	bodypkg "github.com/rickb777/httpclient/body"
 )
@@ -22,31 +24,26 @@ type TestingT interface {
 	Helper()
 }
 
-const (
-	ContentTypeApplicationJSON = "application/json; charset=UTF-8"
-	ContentTypeApplicationXML  = "application/xml; charset=UTF-8"
-)
-
 // MockJSONResponse builds a JSON http.Response using a literal JSON string or a data struct.
 func MockJSONResponse(code int, body interface{}) *http.Response {
 	if b, ok := body.(string); ok {
-		return MockResponse(code, []byte(b), ContentTypeApplicationJSON)
+		return MockResponse(code, []byte(b), contenttype.ApplicationJSON)
 	}
 
 	s := &bytes.Buffer{}
 	must(json.NewEncoder(s).Encode(body))
-	return MockResponse(code, s.Bytes(), ContentTypeApplicationJSON)
+	return MockResponse(code, s.Bytes(), contenttype.ApplicationJSON)
 }
 
 // MockXMLResponse builds an XML http.Response using a literal XML string or a data struct.
 func MockXMLResponse(code int, body interface{}) *http.Response {
 	if b, ok := body.(string); ok {
-		return MockResponse(code, []byte(b), ContentTypeApplicationXML)
+		return MockResponse(code, []byte(b), contenttype.ApplicationXML)
 	}
 
 	s := &bytes.Buffer{}
 	must(xml.NewEncoder(s).Encode(body))
-	return MockResponse(code, s.Bytes(), ContentTypeApplicationXML)
+	return MockResponse(code, s.Bytes(), contenttype.ApplicationXML)
 }
 
 // MockResponse builds a http.Response. If contentType blank it is ignored.
@@ -58,9 +55,9 @@ func MockResponse(code int, body []byte, contentType string) *http.Response {
 		Body:       bodypkg.NewBody(body),
 	}
 
-	res.Header.Set("Content-Length", strconv.Itoa(len(body)))
+	res.Header.Set(headername.ContentLength, strconv.Itoa(len(body)))
 	if contentType != "" {
-		res.Header.Set("Content-Type", contentType)
+		res.Header.Set(headername.ContentType, contentType)
 	}
 	return res
 }

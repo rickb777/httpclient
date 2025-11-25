@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/file"
 	"github.com/rickb777/httpclient/mime"
@@ -45,7 +46,8 @@ func (lc LogContent) FileExtension() string {
 // IsTextual determines whether this content is normally consiudered to be
 // textual. If the content is binary, the result is false.
 func (lc LogContent) IsTextual() bool {
-	return mime.IsTextual(lc.ContentType())
+	ct := header.ParseContentType(lc.ContentType())
+	return ct.IsTextual()
 }
 
 // FileName builds a filename that distinctively represents the request that
