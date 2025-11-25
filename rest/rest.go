@@ -138,7 +138,7 @@ func processRequestEntity(input any) (io.Reader, http.Header) {
 		// must set earlier: m.Set(headername.ContentType, ...)
 		return data, m
 	default:
-		rb, err := JsonMarshalToString(data)
+		rb, err := bodypkg.JsonMarshalToString(data)
 		if err != nil {
 			panic(err)
 		}
@@ -261,7 +261,7 @@ func (rr *RESTResponse) Unmarshal(output any) (respHeader http.Header, statusCod
 
 	default:
 		if isContentType(rr.Res, ApplicationJSON) {
-			err := JsonUnmarshal(rr.Body, output)
+			err := bodypkg.JsonUnmarshal(rr.Body, output)
 			return rr.Res.Header, rr.Res.StatusCode, errors.Join(rr.Err, err)
 		}
 	}

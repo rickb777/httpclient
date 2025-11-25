@@ -7,7 +7,6 @@ package body
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 )
 
@@ -79,9 +78,8 @@ func Copy(rdr io.Reader) (*Body, error) {
 // This is a convenience for creating request entities.
 // Any JSON encoding errors are silently discarded (e.g. from attempting to encode a Go channel).
 func JSON(value any) *Body {
-	b := &bytes.Buffer{}
-	_ = json.NewEncoder(b).Encode(value)
-	return &Body{b: b.Bytes()}
+	bs, _ := JsonMarshal(value)
+	return &Body{b: bs}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -121,7 +119,7 @@ func (b *Body) Read(p []byte) (n int, err error) {
 	return
 }
 
-// Rewind rewinds the read pointer in the Body to zero and returns
+// Rewind rewinds the read pointer in the Body to zero. It returns
 // the modified Body. See [Body.Read]. b may be nil.
 func (b *Body) Rewind() *Body {
 	if b != nil {

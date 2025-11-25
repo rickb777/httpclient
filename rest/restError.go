@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/httpclient/body"
 )
 
 type Body interface {
@@ -43,7 +44,7 @@ func (re *RESTError) Unwrap() error {
 }
 
 func (re *RESTError) UnmarshalJSONResponse(value any) error {
-	return JsonUnmarshal(re.Response, value)
+	return body.JsonUnmarshal(re.Response, value)
 }
 
 var RESTErrorStringLimit = 250

@@ -1,16 +1,22 @@
-package rest
+package body
 
 import (
 	"encoding/json"
 	"io"
 )
 
+// JsonMarshal marshals a value as JSON.
+// To replace this with a Jsoniter implementation, set
+//
+//	rest.JsonMarshalToString = jsoniter.JSON.Marshal
+var JsonMarshal = json.Marshal
+
 // JsonMarshalToString marshals a value as a JSON string.
 // To replace this with a Jsoniter implementation, set
 //
 //	rest.JsonMarshalToString = jsoniter.JSON.MarshalToString
 var JsonMarshalToString = func(v any) (string, error) {
-	bs, err := json.Marshal(v)
+	bs, err := JsonMarshal(v)
 	return string(bs), err
 }
 
