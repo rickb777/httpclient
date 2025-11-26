@@ -11,12 +11,6 @@ import (
 	"github.com/rickb777/httpclient/hostheader"
 )
 
-type HttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-//-------------------------------------------------------------------------------------------------
-
 // Headers builds a http.Header using the pairs of key-value strings.
 func Headers(headerKeyVals ...string) http.Header {
 	h := make(http.Header)

@@ -12,6 +12,7 @@ import (
 	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/httpclient"
 	bodypkg "github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/rest/temperror"
 )
@@ -66,7 +67,7 @@ func (rr *RESTRequest) WithKV(headerKeyVals ...string) *RESTRequest {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Head(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Head(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodHead, httpClient)
 }
 
@@ -74,7 +75,7 @@ func (rr *RESTRequest) Head(httpClient HttpClient) *RESTResponse {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Get(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Get(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodGet, httpClient)
 }
 
@@ -82,7 +83,7 @@ func (rr *RESTRequest) Get(httpClient HttpClient) *RESTResponse {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Post(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Post(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodPost, httpClient)
 }
 
@@ -90,7 +91,7 @@ func (rr *RESTRequest) Post(httpClient HttpClient) *RESTResponse {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Put(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Put(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodPut, httpClient)
 }
 
@@ -98,7 +99,7 @@ func (rr *RESTRequest) Put(httpClient HttpClient) *RESTResponse {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Patch(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Patch(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodPatch, httpClient)
 }
 
@@ -106,7 +107,7 @@ func (rr *RESTRequest) Patch(httpClient HttpClient) *RESTResponse {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) Delete(httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) Delete(httpClient httpclient.HttpClient) *RESTResponse {
 	return rr.HTTPRoundTrip(http.MethodDelete, httpClient)
 }
 
@@ -165,7 +166,7 @@ type RESTRequest struct {
 // The response headers and status code are returned.
 // In order to close resources correctly, it is essential to call one of
 // [RESTResponse.Status], [RESTResponse.Unmarshal] or [RESTResponse.ToMap]
-func (rr *RESTRequest) HTTPRoundTrip(method string, httpClient HttpClient) *RESTResponse {
+func (rr *RESTRequest) HTTPRoundTrip(method string, httpClient httpclient.HttpClient) *RESTResponse {
 	if rr.err != nil {
 		return &RESTResponse{Err: rr.err}
 	}
