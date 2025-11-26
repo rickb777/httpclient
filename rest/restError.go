@@ -16,8 +16,8 @@ type Body interface {
 	io.Reader
 }
 
-type RESTError struct {
-	cause        error
+type RestError struct {
+	Cause        error
 	Code         int
 	Request      *http.Request
 	ResponseType header.ContentType
@@ -25,8 +25,8 @@ type RESTError struct {
 }
 
 // Error makes it compatible with `error` interface.
-func (re *RESTError) Error() string {
-	if re.ResponseType.Type == "" {
+func (re *RestError) Error() string {
+	if re.ResponseType.MediaType == "" {
 		return fmt.Sprintf(`%d: %s %s`, re.Code, re.Request.Method, re.Request.URL)
 	}
 	if re.ResponseType.IsTextual() {
@@ -39,11 +39,11 @@ func (re *RESTError) Error() string {
 	return fmt.Sprintf(`%d: %s %s %s`, re.Code, re.Request.Method, re.Request.URL, re.ResponseType)
 }
 
-func (re *RESTError) Unwrap() error {
-	return re.cause
+func (re *RestError) Unwrap() error {
+	return re.Cause
 }
 
-func (re *RESTError) UnmarshalJSONResponse(value any) error {
+func (re *RestError) UnmarshalJSONResponse(value any) error {
 	return body.JsonUnmarshal(re.Response, value)
 }
 

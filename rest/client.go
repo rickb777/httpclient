@@ -1,51 +1,103 @@
 package rest
 
 import (
-	"crypto/tls"
+	"context"
 	"net/http"
-	"time"
+	"net/http/cookiejar"
+	"os"
+	"sync"
 
-	"github.com/rickb777/acceptable/contenttype"
-	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/httpclient"
-	"github.com/rickb777/httpclient/hostheader"
+	authpkg "github.com/rickb777/httpclient/auth"
+	bodypkg "github.com/rickb777/httpclient/body"
+	"golang.org/x/net/publicsuffix"
 )
 
-// Headers builds a http.Header using the pairs of key-value strings.
-func Headers(headerKeyVals ...string) http.Header {
-	h := make(http.Header)
-	for i := 1; i < len(headerKeyVals); i += 2 {
-		h.Add(headerKeyVals[i-1], headerKeyVals[i])
-	}
-	return h
+type RestClient interface {
+	Request(ctx context.Context, method, path string, reqBody any, opts ...ReqOpt) (*http.Response, error)
+	Head(ctx context.Context, path string, opts ...ReqOpt) (*Response, error)
+	Get(ctx context.Context, path string, opts ...ReqOpt) (*Response, error)
+	Put(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (*Response, error)
+	Post(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (*Response, error)
+	Delete(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (*Response, error)
+	ClearCookies()
+}
+
+// Response holds an HTTP response with the entity in a buffer.
+type Response struct {
+	// StatusCode the HTTP status code
+	StatusCode int
+	// Header the response headers
+	Header http.Header
+	// Body the buffered response entity
+	Body *bodypkg.Body
+	// Request the original request
+	Request *http.Request
+}
+
+// client defines our structure
+type client struct {
+	root      string
+	headers   http.Header
+	hc        httpclient.HttpClient
+	authMutex sync.Mutex
+	auth      authpkg.Authenticator
+	cookies   *cookiejar.Jar
 }
 
 //-------------------------------------------------------------------------------------------------
 
-var DefaultTransport http.RoundTripper
-
-// DefaultClient gets a http.Client with the DefaultTransport as its round-tripper
-// and a specified timeout. A timeout of zero means no timeout.
-func DefaultClient(timeout time.Duration) httpclient.HttpClient {
-	if timeout < 0 {
-		panic(timeout)
+// NewClient creates a new Client. By default, this uses the default HTTP client.
+func NewClient(uri string, opts ...ClientOpt) RestClient {
+	cl := &client{
+		root:    withoutTrailingSlash(uri),
+		headers: make(http.Header),
+		hc:      http.DefaultClient,
+		auth:    authpkg.Anonymous,
 	}
-	return hostheader.Wrap(&http.Client{
-		Transport: DefaultTransport,
-		Timeout:   timeout,
-	})
+	cl.ClearCookies()
+
+	for _, opt := range opts {
+		opt(cl)
+	}
+	return cl
 }
 
-// RESTClient returns a client that sets request headers on every request.
-//
-//   - Host: (from URL)
-//   - Accept: application/json
-func RESTClient(timeout time.Duration) httpclient.HttpClient {
-	return hostheader.Wrap(DefaultClient(timeout),
-		headername.Accept, contenttype.ApplicationJSON)
+//-------------------------------------------------------------------------------------------------
+
+type ClientOpt func(RestClient)
+
+// AddHeader sets a request header that will be applied to all subsequent requests.
+func AddHeader(key, value string) ClientOpt {
+	return func(c RestClient) {
+		c.(*client).headers.Add(key, value)
+	}
 }
 
-// SetDefaultTLSConfig sets the TLS configuration used by the default transport.
-func SetDefaultTLSConfig(cfg *tls.Config) {
-	DefaultTransport.(*http.Transport).TLSClientConfig = cfg
+// SetAuthentication sets the authentication credentials and method.
+// Leave the authenticator method blank to allow HTTP challenges to
+// select an appropriate method. Otherwise it should be "basic".
+func SetAuthentication(authenticator authpkg.Authenticator) ClientOpt {
+	return func(c RestClient) {
+		c.(*client).auth = authenticator
+	}
+}
+
+// SetHttpClient changes the http.Client. This allows control over
+// the http.Transport, timeouts etc.
+func SetHttpClient(httpClient httpclient.HttpClient) ClientOpt {
+	return func(c RestClient) {
+		c.(*client).hc = httpClient
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
+
+func (c *client) ClearCookies() {
+	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		log(err)
+		os.Exit(1)
+	}
+	c.cookies = jar
 }
