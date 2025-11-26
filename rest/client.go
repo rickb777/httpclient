@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/httpclient"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
@@ -29,6 +30,8 @@ type Response struct {
 	StatusCode int
 	// Header the response headers
 	Header http.Header
+	// Type the content type of the response entity
+	Type header.ContentType
 	// Body the buffered response entity
 	Body *bodypkg.Body
 	// Request the original request

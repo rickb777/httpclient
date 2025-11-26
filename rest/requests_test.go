@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/rickb777/acceptable/contenttype"
+	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/expect"
 	bodypkg "github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/internal/mytesting"
@@ -62,9 +63,9 @@ Content-Length: 21
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
-	expect.Map(res.Header).ToHaveLength(t, 2)
-	expect.String(res.Header.Get("Content-Length")).ToBe(t, "21")
-	expect.String(res.Header.Get("Content-Type")).ToBe(t, contenttype.ApplicationJSON)
+	expect.Map(res.Header).ToHaveLength(t, 1)
+	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
+	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "")
 	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodHead)
@@ -84,9 +85,9 @@ Content-Length: 21
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
-	expect.Map(res.Header).ToHaveLength(t, 2)
-	expect.String(res.Header.Get("Content-Length")).ToBe(t, "21")
-	expect.String(res.Header.Get("Content-Type")).ToBe(t, contenttype.ApplicationJSON)
+	expect.Map(res.Header).ToHaveLength(t, 1)
+	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
+	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "{\"A\":\"hello\",\"B\":10}\n")
 	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodGet)
@@ -107,9 +108,9 @@ Content-Length: 21
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
-	expect.Map(res.Header).ToHaveLength(t, 2)
-	expect.String(res.Header.Get("Content-Length")).ToBe(t, "21")
-	expect.String(res.Header.Get("Content-Type")).ToBe(t, contenttype.ApplicationJSON)
+	expect.Map(res.Header).ToHaveLength(t, 1)
+	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
+	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "{\"A\":\"hello\",\"B\":10}\n")
 	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodPost)
@@ -129,9 +130,9 @@ Content-Length: 0
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
-	expect.Map(res.Header).ToHaveLength(t, 2)
-	expect.String(res.Header.Get("Content-Length")).ToBe(t, "0")
-	expect.String(res.Header.Get("Content-Type")).ToBe(t, contenttype.ApplicationJSON)
+	expect.Map(res.Header).ToHaveLength(t, 1)
+	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "0")
+	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "")
 	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodPut)

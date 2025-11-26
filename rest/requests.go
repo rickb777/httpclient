@@ -10,9 +10,11 @@ import (
 	"strings"
 
 	. "github.com/rickb777/acceptable/contenttype"
+	"github.com/rickb777/acceptable/header"
 	. "github.com/rickb777/acceptable/headername"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
+	"github.com/rickb777/httpclient/rest/temperror"
 )
 
 // ReqOpt optionally amends or enhances a request before it is sent.
@@ -119,6 +121,7 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 
 	c.cookies.SetCookies(req.URL, res.Cookies())
 	// note that res.Body is not yet closed
+
 	return res, err
 }
 
@@ -200,68 +203,66 @@ func processRequestEntity(input any) (requestBody *bodypkg.Body, hdr http.Header
 
 // Head performs a HEAD request. The response body is always empty.
 func (c *client) Head(ctx context.Context, path string, opts ...ReqOpt) (response *Response, err error) {
-	rs, err := c.Request(ctx, http.MethodHead, path, nil, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	_ = rs.Body.Close()
-
-	return &Response{StatusCode: rs.StatusCode, Header: rs.Header, Body: &bodypkg.Body{}}, err
+	return responseOf(c.Request(ctx, http.MethodHead, path, nil, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func (c *client) Get(ctx context.Context, path string, opts ...ReqOpt) (response *Response, err error) {
-	rs, err := c.Request(ctx, http.MethodGet, path, nil, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rs.Body.Close()
-
-	body, err := bodypkg.Copy(rs.Body)
-	return &Response{StatusCode: rs.StatusCode, Header: rs.Header, Body: body}, err
+	return responseOf(c.Request(ctx, http.MethodGet, path, nil, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func (c *client) Post(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
-	rs, err := c.Request(ctx, http.MethodPost, path, reqBody, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rs.Body.Close()
-
-	body, err := bodypkg.Copy(rs.Body)
-	return &Response{StatusCode: rs.StatusCode, Header: rs.Header, Body: body}, err
+	return responseOf(c.Request(ctx, http.MethodPost, path, reqBody, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func (c *client) Put(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
-	rs, err := c.Request(ctx, http.MethodPut, path, reqBody, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rs.Body.Close()
-
-	body, err := bodypkg.Copy(rs.Body)
-	return &Response{StatusCode: rs.StatusCode, Header: rs.Header, Body: body}, err
+	return responseOf(c.Request(ctx, http.MethodPut, path, reqBody, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
 func (c *client) Delete(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
-	rs, err := c.Request(ctx, http.MethodDelete, path, reqBody, opts...)
+	return responseOf(c.Request(ctx, http.MethodDelete, path, reqBody, opts...))
+}
+
+//-------------------------------------------------------------------------------------------------
+
+func responseOf(res *http.Response, err error) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
 
-	defer rs.Body.Close()
+	defer res.Body.Close()
+	body, err := bodypkg.Copy(res.Body)
 
-	body, err := bodypkg.Copy(rs.Body)
-	return &Response{StatusCode: rs.StatusCode, Header: rs.Header, Body: body}, err
+	ct := header.ParseContentType(res.Header.Get(ContentType))
+	delete(res.Header, ContentType)
+
+	r := &Response{
+		StatusCode: res.StatusCode,
+		Request:    res.Request,
+		Header:     res.Header,
+		Type:       ct,
+		Body:       body,
+	}
+
+	if res.StatusCode >= 400 {
+		err = &RestError{
+			Code:         res.StatusCode,
+			Request:      res.Request,
+			ResponseType: ct,
+			Response:     body,
+		}
+	}
+
+	if res.StatusCode >= 500 {
+		err = temperror.Wrap(err)
+	}
+
+	return r, err
 }
