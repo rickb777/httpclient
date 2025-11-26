@@ -8,10 +8,11 @@ import (
 	urlpkg "net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/header"
-	. "github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/acceptable/headername"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/rest/temperror"
@@ -20,13 +21,10 @@ import (
 // ReqOpt optionally amends or enhances a request before it is sent.
 type ReqOpt func(*http.Request)
 
-// Headers adds header values to the request.
-// kv is a list of key & value pairs.
-func Headers(kv ...string) ReqOpt {
+// Query sets the query parameters on the request. Existing query parameters are replaced.
+func Query(query urlpkg.Values) ReqOpt {
 	return func(req *http.Request) {
-		for i := 1; i < len(kv); i += 2 {
-			req.Header.Add(kv[i-1], kv[i])
-		}
+		req.URL.RawQuery = query.Encode()
 	}
 }
 
@@ -40,10 +38,35 @@ func QueryKV(kv ...string) ReqOpt {
 	return Query(v)
 }
 
-// Query sets the query parameters on the request. Existing query parameters are replaced.
-func Query(query urlpkg.Values) ReqOpt {
+// Headers adds header values to the request.
+// kv is a list of key & value pairs.
+func Headers(kv ...string) ReqOpt {
 	return func(req *http.Request) {
-		req.URL.RawQuery = query.Encode()
+		for i := 1; i < len(kv); i += 2 {
+			req.Header.Add(kv[i-1], kv[i])
+		}
+	}
+}
+
+// IfModifiedSince makes a request conditional upon change history and is typically used for GET requests.
+func IfModifiedSince(t time.Time) ReqOpt {
+	return func(req *http.Request) {
+		req.Header.Add(headername.IfModifiedSince, header.FormatHTTPDateTime(t))
+	}
+}
+
+// IfNoneMatch makes a request conditional upon ETags and is typically used for GET requests.
+func IfNoneMatch(etag ...header.ETag) ReqOpt {
+	return func(req *http.Request) {
+		req.Header.Add(headername.IfNoneMatch, header.ETags(etag).String())
+	}
+}
+
+// IfMatch makes a request conditional upon ETags and is typically used for PUT, POST and DELETE requests.
+// There is also an If-Unmodified-Since header, but If-Match takes precedence (see RFC-9110).
+func IfMatch(etag ...header.ETag) ReqOpt {
+	return func(req *http.Request) {
+		req.Header.Add(headername.IfMatch, header.ETags(etag).String())
 	}
 }
 
@@ -116,13 +139,13 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 		}
 		return c.repeat(ctx, depth, res, method, path, bodyBuf, opts...)
 	} else if res.StatusCode == http.StatusUnauthorized {
-		return res, newPathError("Authorize", c.root, res.StatusCode)
+		return res, newPathError("Authorize", req.URL.Path, res.StatusCode)
 	}
 
 	c.cookies.SetCookies(req.URL, res.Cookies())
 	// note that res.Body is not yet closed
 
-	return res, err
+	return res, nil
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -157,23 +180,23 @@ func (c *client) repeat(ctx context.Context, depth int, res *http.Response, meth
 
 func processRequestEntity(input any) (requestBody *bodypkg.Body, hdr http.Header, err error) {
 	m := make(http.Header)
-	m.Set(Accept, ApplicationJSON)
-	m.Set(AcceptEncoding, "identity")
+	m.Set(headername.Accept, ApplicationJSON)
+	m.Set(headername.AcceptEncoding, "identity")
 
 	switch data := input.(type) {
 	case nil:
 	case urlpkg.Values:
-		m.Set(ContentType, ApplicationForm)
+		m.Set(headername.ContentType, ApplicationForm)
 		requestBody = bodypkg.NewBodyString(data.Encode())
 	case string:
-		m.Set(ContentType, ApplicationJSON)
+		m.Set(headername.ContentType, ApplicationJSON)
 		requestBody = bodypkg.NewBodyString(data)
 	case *string:
-		m.Set(ContentType, ApplicationJSON)
+		m.Set(headername.ContentType, ApplicationJSON)
 		requestBody = bodypkg.NewBodyString(*data)
 	case []byte:
 		// must set earlier: m.Set(headername.ContentType, ...)
-		m.Set(ContentLength, strconv.Itoa(len(data)))
+		m.Set(headername.ContentLength, strconv.Itoa(len(data)))
 		requestBody = bodypkg.NewBody(data)
 	case io.Reader:
 		// must set earlier: m.Set(headername.ContentType, ...)
@@ -189,11 +212,11 @@ func processRequestEntity(input any) (requestBody *bodypkg.Body, hdr http.Header
 		}
 		rb += "\n" // required for Posix compliance
 		requestBody = bodypkg.NewBodyString(rb)
-		m.Set(ContentType, ApplicationJSON)
+		m.Set(headername.ContentType, ApplicationJSON)
 	}
 
 	if requestBody != nil {
-		m.Set(ContentLength, strconv.Itoa(len(requestBody.Bytes())))
+		m.Set(headername.ContentLength, strconv.Itoa(len(requestBody.Bytes())))
 	}
 
 	return requestBody, m, err
@@ -208,24 +231,28 @@ func (c *client) Head(ctx context.Context, path string, opts ...ReqOpt) (respons
 
 //-------------------------------------------------------------------------------------------------
 
+// Get performs a GET request.
 func (c *client) Get(ctx context.Context, path string, opts ...ReqOpt) (response *Response, err error) {
 	return responseOf(c.Request(ctx, http.MethodGet, path, nil, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
+// Post performs a POST request using the request body supplied, which can be nil.
 func (c *client) Post(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
 	return responseOf(c.Request(ctx, http.MethodPost, path, reqBody, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
+// Put performs a PUT request using the request body supplied, which can be nil.
 func (c *client) Put(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
 	return responseOf(c.Request(ctx, http.MethodPut, path, reqBody, opts...))
 }
 
 //-------------------------------------------------------------------------------------------------
 
+// Delete performs a DELETE request. The request body can be supplied but should normally be nil (see RFC-9110).
 func (c *client) Delete(ctx context.Context, path string, reqBody any, opts ...ReqOpt) (response *Response, err error) {
 	return responseOf(c.Request(ctx, http.MethodDelete, path, reqBody, opts...))
 }
@@ -234,14 +261,17 @@ func (c *client) Delete(ctx context.Context, path string, reqBody any, opts ...R
 
 func responseOf(res *http.Response, err error) (*Response, error) {
 	if err != nil {
-		return nil, err
+		return nil, &RestError{
+			Cause:   err,
+			Request: res.Request,
+		}
 	}
 
 	defer res.Body.Close()
 	body, err := bodypkg.Copy(res.Body)
 
-	ct := header.ParseContentType(res.Header.Get(ContentType))
-	delete(res.Header, ContentType)
+	ct := header.ParseContentType(res.Header.Get(headername.ContentType))
+	delete(res.Header, headername.ContentType)
 
 	r := &Response{
 		StatusCode: res.StatusCode,

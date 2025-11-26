@@ -14,6 +14,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// RestClient implements HTTP client requests as typically used for REST APIs etc.
 type RestClient interface {
 	Request(ctx context.Context, method, path string, reqBody any, opts ...ReqOpt) (*http.Response, error)
 	Head(ctx context.Context, path string, opts ...ReqOpt) (*Response, error)
@@ -68,6 +69,7 @@ func NewClient(uri string, opts ...ClientOpt) RestClient {
 
 //-------------------------------------------------------------------------------------------------
 
+// ClientOpt functions configure the client.
 type ClientOpt func(RestClient)
 
 // AddHeader sets a request header that will be applied to all subsequent requests.
@@ -96,6 +98,7 @@ func SetHttpClient(httpClient httpclient.HttpClient) ClientOpt {
 
 //-------------------------------------------------------------------------------------------------
 
+// ClearCookies drops any existing cookies.
 func (c *client) ClearCookies() {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
