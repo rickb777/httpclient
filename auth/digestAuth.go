@@ -46,11 +46,11 @@ func (d *DigestAuth) Password() string {
 	return d.pw
 }
 
-// Authorize the current request.
-func (d *DigestAuth) Authorize(req *http.Request) {
+// Authenticate the current request.
+func (d *DigestAuth) Authenticate(req *http.Request) {
 	d.digestParts["username"] = d.user
 	d.digestParts["password"] = d.pw
-	req.Header.Set("Authorization", getDigestAuthorization(req, d.digestParts))
+	req.Header.Set("Authorization", getDigestAuthentication(req, d.digestParts))
 }
 
 func (d *DigestAuth) Challenge(ss []string) Authenticator {
@@ -133,7 +133,7 @@ var getCnonce = func() string {
 	return fmt.Sprintf("%x", b)[:16]
 }
 
-func getDigestAuthorization(req *http.Request, d map[string]string) string {
+func getDigestAuthentication(req *http.Request, d map[string]string) string {
 	// These are the correct ha1 and ha2 for qop=auth. We should probably check for other types of qop.
 
 	var (
@@ -191,16 +191,26 @@ func getDigestAuthorization(req *http.Request, d map[string]string) string {
 		)
 	}
 
-	authorization := fmt.Sprintf(`Digest username="%s", realm="%s", uri="%s", algorithm=%s, nonce="%s", nc=%v, cnonce="%s", response="%s"`,
-		d["username"], d["realm"], req.URL.Path, d["algorithm"], d["nonce"], nonceCount, cnonce, response)
+	var authentication strings.Builder
+	fmt.Fprintf(&authentication, `Digest username="%s", realm="%s", uri="%s", algorithm=%s`,
+		d["username"],
+		d["realm"],
+		req.URL.Path,
+		d["algorithm"])
+
+	fmt.Fprintf(&authentication, `, nonce="%s", nc=%v, cnonce="%s", response="%s"`,
+		d["nonce"],
+		nonceCount,
+		cnonce,
+		response)
 
 	if chosenQop != "" {
-		authorization += fmt.Sprintf(`, qop=%s`, chosenQop)
+		fmt.Fprintf(&authentication, `, qop=%s`, chosenQop)
 	}
 
 	if d["opaque"] != "" {
-		authorization += fmt.Sprintf(`, opaque="%s"`, d["opaque"])
+		fmt.Fprintf(&authentication, `, opaque="%s"`, d["opaque"])
 	}
 
-	return authorization
+	return authentication.String()
 }

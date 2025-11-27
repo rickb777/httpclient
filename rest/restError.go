@@ -3,10 +3,8 @@ package rest
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 
-	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/httpclient/body"
 )
 
@@ -17,26 +15,23 @@ type Body interface {
 }
 
 type RestError struct {
-	Cause        error
-	Code         int
-	Request      *http.Request
-	ResponseType header.ContentType
-	Response     Body
+	Response
+	Cause error
 }
 
 // Error makes it compatible with `error` interface.
 func (re *RestError) Error() string {
-	if re.ResponseType.MediaType == "" {
-		return fmt.Sprintf(`%d: %s %s`, re.Code, re.Request.Method, re.Request.URL)
+	if re.Type.MediaType == "" {
+		return fmt.Sprintf(`%d: %s %s`, re.StatusCode, re.Request.Method, re.Request.URL)
 	}
-	if re.ResponseType.IsTextual() {
-		b := strings.TrimSpace(re.Response.String())
+	if re.Type.IsTextual() {
+		b := strings.TrimSpace(re.Response.Body.String())
 		if len(b) > RESTErrorStringLimit {
 			b = b[:RESTErrorStringLimit] + "..."
 		}
-		return fmt.Sprintf(`%d: %s %s %s %s`, re.Code, re.Request.Method, re.Request.URL, re.ResponseType, b)
+		return fmt.Sprintf(`%d: %s %s %s %s`, re.StatusCode, re.Request.Method, re.Request.URL, re.Type, b)
 	}
-	return fmt.Sprintf(`%d: %s %s %s`, re.Code, re.Request.Method, re.Request.URL, re.ResponseType)
+	return fmt.Sprintf(`%d: %s %s %s`, re.StatusCode, re.Request.Method, re.Request.URL, re.Type)
 }
 
 func (re *RestError) Unwrap() error {
@@ -44,7 +39,10 @@ func (re *RestError) Unwrap() error {
 }
 
 func (re *RestError) UnmarshalJSONResponse(value any) error {
-	return body.JsonUnmarshal(re.Response, value)
+	if re.Response.Body == nil {
+		return nil
+	}
+	return body.JsonUnmarshal(re.Response.Body, value)
 }
 
 var RESTErrorStringLimit = 250

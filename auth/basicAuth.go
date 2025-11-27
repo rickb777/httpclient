@@ -44,9 +44,9 @@ func (b *basicAuth) Password() string {
 	return b.pw
 }
 
-// Authorize the current request.
-func (b *basicAuth) Authorize(req *http.Request) {
+// Authenticate the current request.
+func (b *basicAuth) Authenticate(req *http.Request) {
 	a := b.user + ":" + b.pw
-	auth := "Basic " + base64.StdEncoding.EncodeToString([]byte(a))
-	req.Header.Set("Authorization", auth)
+	authorization := "Basic " + base64.StdEncoding.EncodeToString([]byte(a))
+	req.Header.Set("Authorization", authorization)
 }

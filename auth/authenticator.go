@@ -13,7 +13,7 @@ type Authenticator interface {
 	Password() string
 	// Challenge is the values from "WWW-Authenticate" header
 	Challenge([]string) Authenticator
-	Authorize(*http.Request)
+	Authenticate(*http.Request)
 }
 
 var Anonymous Authenticator = &noAuth{}
@@ -59,5 +59,5 @@ func (n *noAuth) Challenge(ss []string) Authenticator {
 	return n
 }
 
-// Authorize the current request
-func (n *noAuth) Authorize(_ *http.Request) {}
+// Authenticate the current request
+func (n *noAuth) Authenticate(_ *http.Request) {}

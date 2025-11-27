@@ -28,8 +28,6 @@ github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjY
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rickb777/acceptable v0.60.0 h1:+j99R3f0HHi+2OLzEoMXNbiZ00roEtzrjwQasPGLteQ=
-github.com/rickb777/acceptable v0.60.0/go.mod h1:2eRAG1pgRPdDEXfKErGRnz6Q0IcnqLo07oWs8WNoEZ0=
 github.com/rickb777/acceptable v0.61.0 h1:f8tYp7kylMgEqSXvVdsKLSriiS1ihsNIwjX8t0M76t0=
 github.com/rickb777/acceptable v0.61.0/go.mod h1:2eRAG1pgRPdDEXfKErGRnz6Q0IcnqLo07oWs8WNoEZ0=
 github.com/rickb777/enumeration/v4 v4.0.12 h1:FkOHb7BjdP6JYrjtwAKCkbM4t6ti48WOocA0l30RABo=

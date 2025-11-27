@@ -10,7 +10,7 @@ import (
 func TestBasic_Authorize(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 
-	Basic("user", "password").Challenge([]string{`Basic realm="WallyWorld"`}).Authorize(req)
+	Basic("user", "password").Challenge([]string{`Basic realm="WallyWorld"`}).Authenticate(req)
 
 	expect.String(req.Header.Get("Authorization")).ToBe(t, "Basic dXNlcjpwYXNzd29yZA==")
 }

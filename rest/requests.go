@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -72,8 +73,8 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 	auth := c.auth // make a duplicate
 	c.authMutex.Unlock()
 
-	// authentication headers
-	auth.Authorize(req)
+	// set the authentication headers
+	auth.Authenticate(req)
 
 	res, err = c.hc.Do(req)
 	if err != nil {
@@ -82,7 +83,11 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 
 	if res.StatusCode == http.StatusUnauthorized && auth.Type() == "noAuth" {
 		if depth > 3 {
-			return nil, &RestError{Code: http.StatusUnauthorized, Request: req, Cause: fmt.Errorf("too many authentication retries")}
+			r2, e2 := copyResponse(res, nil)
+			return nil, &RestError{
+				Response: r2,
+				Cause:    errors.Join(e2, fmt.Errorf("too many authentication retries")),
+			}
 		}
 		return c.repeat(ctx, depth, res, method, path, bodyBuf, opts...)
 	} else if res.StatusCode == http.StatusUnauthorized {
@@ -206,40 +211,55 @@ func (c *client) Delete(ctx context.Context, path string, reqBody any, opts ...R
 
 //-------------------------------------------------------------------------------------------------
 
-func responseOf(res *http.Response, err error) (*Response, error) {
-	if err != nil {
-		return nil, &RestError{
-			Cause:   err,
-			Request: res.Request,
+func copyResponse(res *http.Response, err error) (Response, error) {
+	var r Response
+
+	// err might be nil, but we defer handling it so that anything available in the
+	// response will also be available in the RESTError.
+
+	if res != nil {
+		defer res.Body.Close()
+		body, e2 := bodypkg.Copy(res.Body)
+		if e2 != nil {
+			return Response{}, &RestError{
+				Cause: errors.Join(err, e2),
+			}
 		}
-	}
 
-	defer res.Body.Close()
-	body, err := bodypkg.Copy(res.Body)
+		ct := header.ParseContentType(res.Header.Get(headername.ContentType))
+		delete(res.Header, headername.ContentType)
 
-	ct := header.ParseContentType(res.Header.Get(headername.ContentType))
-	delete(res.Header, headername.ContentType)
-
-	r := &Response{
-		StatusCode: res.StatusCode,
-		Request:    res.Request,
-		Header:     res.Header,
-		Type:       ct,
-		Body:       body,
-	}
-
-	if res.StatusCode >= 400 {
-		err = &RestError{
-			Code:         res.StatusCode,
-			Request:      res.Request,
-			ResponseType: ct,
-			Response:     body,
+		r = Response{
+			StatusCode: res.StatusCode,
+			Request:    res.Request,
+			Header:     res.Header,
+			Type:       ct,
+			Body:       body,
 		}
-	}
-
-	if res.StatusCode >= 500 {
-		err = temperror.Wrap(err)
 	}
 
 	return r, err
+}
+
+//-------------------------------------------------------------------------------------------------
+
+func responseOf(res *http.Response, err error) (*Response, error) {
+	r, err2 := copyResponse(res, err)
+
+	// err might be nil, but we defer handling it so that anything available in the
+	// response will also be available in the RESTError.
+
+	var httpStatusCodeError error
+
+	if r.StatusCode >= 400 {
+		httpStatusCodeError = &RestError{
+			Response: r,
+		}
+	}
+
+	if r.StatusCode >= 500 {
+		httpStatusCodeError = temperror.Wrap(httpStatusCodeError)
+	}
+
+	return &r, errors.Join(err2, httpStatusCodeError)
 }

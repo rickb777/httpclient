@@ -38,8 +38,8 @@ package auth
 //	return sa
 //}
 
-// Authorize the current request.
-//func (sa *samlAuth) Authorize(req *http.Request) {
+// Authenticate the current request.
+//func (sa *samlAuth) Authenticate(req *http.Request) {
 //	authCookie, _, err := sa.getAuth()
 //	if err == nil {
 //		req.Header.Set("Cookie", authCookie)
