@@ -8,7 +8,6 @@ import (
 	urlpkg "net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/header"
@@ -17,58 +16,6 @@ import (
 	bodypkg "github.com/rickb777/httpclient/body"
 	"github.com/rickb777/httpclient/rest/temperror"
 )
-
-// ReqOpt optionally amends or enhances a request before it is sent.
-type ReqOpt func(*http.Request)
-
-// Query sets the query parameters on the request. Existing query parameters are replaced.
-func Query(query urlpkg.Values) ReqOpt {
-	return func(req *http.Request) {
-		req.URL.RawQuery = query.Encode()
-	}
-}
-
-// QueryKV adds query values to the request.
-// kv is a list of key & value pairs.
-func QueryKV(kv ...string) ReqOpt {
-	v := make(urlpkg.Values)
-	for i := 1; i < len(kv); i += 2 {
-		v.Add(kv[i-1], kv[i])
-	}
-	return Query(v)
-}
-
-// Headers adds header values to the request.
-// kv is a list of key & value pairs.
-func Headers(kv ...string) ReqOpt {
-	return func(req *http.Request) {
-		for i := 1; i < len(kv); i += 2 {
-			req.Header.Add(kv[i-1], kv[i])
-		}
-	}
-}
-
-// IfModifiedSince makes a request conditional upon change history and is typically used for GET requests.
-func IfModifiedSince(t time.Time) ReqOpt {
-	return func(req *http.Request) {
-		req.Header.Add(headername.IfModifiedSince, header.FormatHTTPDateTime(t))
-	}
-}
-
-// IfNoneMatch makes a request conditional upon ETags and is typically used for GET requests.
-func IfNoneMatch(etag ...header.ETag) ReqOpt {
-	return func(req *http.Request) {
-		req.Header.Add(headername.IfNoneMatch, header.ETags(etag).String())
-	}
-}
-
-// IfMatch makes a request conditional upon ETags and is typically used for PUT, POST and DELETE requests.
-// There is also an If-Unmodified-Since header, but If-Match takes precedence (see RFC-9110).
-func IfMatch(etag ...header.ETag) ReqOpt {
-	return func(req *http.Request) {
-		req.Header.Add(headername.IfMatch, header.ETags(etag).String())
-	}
-}
 
 // Request performs one or more round-trip HTTP requests, attempting to satisfy the authentication challenge
 // if one is received. The bare *http.Response is returned; this contains the response entity as io.ReadCloser,

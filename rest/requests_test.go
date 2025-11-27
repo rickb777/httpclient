@@ -6,8 +6,10 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rickb777/acceptable/contenttype"
+	"github.com/rickb777/acceptable/header"
 	"github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/expect"
 	bodypkg "github.com/rickb777/httpclient/body"
@@ -59,7 +61,7 @@ Content-Length: 21
 `)
 	cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
 
-	res, err := cl.Head(context.Background(), "/bar", Headers("X-Extra", "Foo"), QueryKV("a", "orses"))
+	res, err := cl.Head(context.Background(), "/bar")
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
@@ -67,7 +69,7 @@ Content-Length: 21
 	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
 	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "")
-	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
+	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodHead)
 	expect.String(testClient.Captured.Header.Get("Accept")).ToBe(t, contenttype.ApplicationJSON)
 }
@@ -81,7 +83,7 @@ Content-Length: 21
 `)
 	cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
 
-	res, err := cl.Get(context.Background(), "/bar", Headers("X-Extra", "Foo"), QueryKV("a", "orses"))
+	res, err := cl.Get(context.Background(), "/bar")
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
@@ -89,7 +91,7 @@ Content-Length: 21
 	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
 	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "{\"A\":\"hello\",\"B\":10}\n")
-	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
+	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodGet)
 	expect.String(testClient.Captured.Header.Get("Accept")).ToBe(t, contenttype.ApplicationJSON)
 }
@@ -104,7 +106,7 @@ Content-Length: 21
 	cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
 	body := bodypkg.NewBodyString("hello world")
 
-	res, err := cl.Post(context.Background(), "/bar", body, Headers("X-Extra", "Foo"), QueryKV("a", "orses"))
+	res, err := cl.Post(context.Background(), "/bar", body)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
@@ -112,7 +114,7 @@ Content-Length: 21
 	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
 	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "{\"A\":\"hello\",\"B\":10}\n")
-	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
+	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodPost)
 	expect.String(testClient.Captured.Header.Get("Accept")).ToBe(t, contenttype.ApplicationJSON)
 }
@@ -126,7 +128,7 @@ Content-Length: 0
 	cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
 	body := bodypkg.NewBodyString("hello world")
 
-	res, err := cl.Put(context.Background(), "/bar", body, Headers("X-Extra", "Foo"), QueryKV("a", "orses"))
+	res, err := cl.Put(context.Background(), "/bar", body)
 
 	expect.Error(err).Not().ToHaveOccurred(t)
 	expect.Number(res.StatusCode).ToBe(t, 200)
@@ -134,7 +136,40 @@ Content-Length: 0
 	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "0")
 	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
 	expect.String(res.Body.String()).ToBe(t, "")
-	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses")
+	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar")
 	expect.String(testClient.Captured.Method).ToBe(t, http.MethodPut)
 	expect.String(testClient.Captured.Header.Get("Accept")).ToBe(t, contenttype.ApplicationJSON)
+}
+
+func TestRequestOpts(t *testing.T) {
+	testClient := mytesting.StubHttpWithBody(`HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 21
+
+{"A":"hello","B":10}
+`)
+	cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
+
+	o1 := Query("a", "orses", "b", "for mutton")
+	o3 := Query("[c]", `/\/`)
+	h1 := Headers("X-Extra", "Foo")
+	c2 := IfModifiedSince(time.Date(2010, 10, 10, 10, 10, 10, 0, time.UTC))
+	c1 := IfNoneMatch(header.ETag{Hash: "abc123"})
+	c3 := IfMatch(header.ETag{Hash: "xyz"}) // in reality, would not be used for GET requests
+
+	res, err := cl.Get(context.Background(), "/bar", h1, o1, o3, c1, c2, c3)
+
+	expect.Error(err).Not().ToHaveOccurred(t)
+	expect.Number(res.StatusCode).ToBe(t, 200)
+	expect.Map(res.Header).ToHaveLength(t, 1)
+	expect.String(res.Header.Get(headername.ContentLength)).ToBe(t, "21")
+	expect.String(res.Type.String()).ToBe(t, contenttype.ApplicationJSON)
+	expect.String(res.Body.String()).ToBe(t, "{\"A\":\"hello\",\"B\":10}\n")
+	expect.String(testClient.Captured.URL.String()).ToBe(t, "http://example.test/foo/bar?a=orses&b=for+mutton&%5Bc%5D=%2F%5C%2F")
+	expect.String(testClient.Captured.Method).ToBe(t, http.MethodGet)
+	expect.String(testClient.Captured.Header.Get("Accept")).ToBe(t, contenttype.ApplicationJSON)
+	expect.String(testClient.Captured.Header.Get("X-Extra")).ToBe(t, "Foo")
+	expect.String(testClient.Captured.Header.Get("If-None-Match")).ToBe(t, `"abc123"`)
+	expect.String(testClient.Captured.Header.Get("If-Match")).ToBe(t, `"xyz"`)
+	expect.String(testClient.Captured.Header.Get("If-Modified-Since")).ToBe(t, `Sun, 10 Oct 2010 10:10:10 GMT`)
 }
