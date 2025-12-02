@@ -15,6 +15,12 @@ import (
 )
 
 // RestClient implements HTTP client requests as typically used for REST APIs etc.
+//
+// The Request method returns a [http.Response] that may contain a body as an [io.ReadCloser], which can
+// be handled appropriately by the caller. The caller must close this body (if the response is not nil).
+//
+// The Head, Get, Put, Post, and Delete methods return a [Response] containing a buffered body that is
+// simpler to use but potentially less performant for large bodies.
 type RestClient interface {
 	Request(ctx context.Context, method, path string, reqBody any, opts ...ReqOpt) (*http.Response, error)
 	Head(ctx context.Context, path string, opts ...ReqOpt) (*Response, error)
