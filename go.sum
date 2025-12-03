@@ -31,6 +31,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rickb777/acceptable v0.61.0 h1:f8tYp7kylMgEqSXvVdsKLSriiS1ihsNIwjX8t0M76t0=
 github.com/rickb777/acceptable v0.61.0/go.mod h1:2eRAG1pgRPdDEXfKErGRnz6Q0IcnqLo07oWs8WNoEZ0=
+github.com/rickb777/acceptable v0.62.0 h1:JnKQkJitoojHXyAdeXkdqcB/QXVCmtXo9keTiUdCzJ0=
+github.com/rickb777/acceptable v0.62.0/go.mod h1:2eRAG1pgRPdDEXfKErGRnz6Q0IcnqLo07oWs8WNoEZ0=
 github.com/rickb777/enumeration/v4 v4.0.12 h1:FkOHb7BjdP6JYrjtwAKCkbM4t6ti48WOocA0l30RABo=
 github.com/rickb777/enumeration/v4 v4.0.12/go.mod h1:dV5RXztzbG2HJIFRoEDUf77khck5A8Wt/3BafAe1uIs=
 github.com/rickb777/expect v1.0.6 h1:1JE3CfYGyuhN5OTu5nqvIF3VjS2AoqoctcGlbNTVl3w=

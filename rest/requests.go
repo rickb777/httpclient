@@ -15,7 +15,6 @@ import (
 	"github.com/rickb777/acceptable/headername"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
-	"github.com/rickb777/httpclient/rest/temperror"
 )
 
 // Request performs one or more round-trip HTTP requests, attempting to satisfy the authentication challenge
@@ -249,17 +248,18 @@ func responseOf(res *http.Response, err error) (*Response, error) {
 	// err might be nil, but we defer handling it so that anything available in the
 	// response will also be available in the RESTError.
 
-	var httpStatusCodeError error
-
 	if r.StatusCode >= 400 {
-		httpStatusCodeError = &RestError{
+		return &r, &RestError{
 			Response: r,
+			Cause:    err2,
+		}
+	} else if r.StatusCode >= 300 {
+		return &r, &RestError{
+			Response: r,
+			Cause: errors.Join(err2,
+				fmt.Errorf("%s: %s", http.StatusText(r.StatusCode), r.Header.Get(headername.Location))),
 		}
 	}
 
-	if r.StatusCode >= 500 {
-		httpStatusCodeError = temperror.Wrap(httpStatusCodeError)
-	}
-
-	return &r, errors.Join(err2, httpStatusCodeError)
+	return &r, err2
 }

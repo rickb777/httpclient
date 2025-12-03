@@ -1,10 +1,11 @@
 package loggingtransport
 
 import (
+	"net/http"
+
 	. "github.com/rickb777/httpclient/internal"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
-	"net/http"
 )
 
 // LoggingTransport is a http.RoundTripper with a pluggable logger.

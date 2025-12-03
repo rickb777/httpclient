@@ -23,12 +23,13 @@ func StubHttpWithBody(body string) *StubHttp {
 }
 
 func (h *StubHttp) Do(req *http.Request) (*http.Response, error) {
-	h.Captured = *req
 	if req.Body != nil {
 		b, _ := bodypkg.Copy(req.Body)
 		h.ReqBody = b.String()
 		req.Body = b
 	}
+	h.Res.Request = req
+	h.Captured = *req
 	if h.Err != nil {
 		return nil, h.Err
 	}

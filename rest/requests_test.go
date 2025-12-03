@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -39,7 +40,9 @@ func Test_all_methods_various_inputs_without_response_204(t *testing.T) {
 
 			cl := NewClient("http://example.test/foo", SetHttpClient(testClient))
 			res, err := cl.Request(context.Background(), method, "/bar", input())
-			expect.Error(err).Not().ToHaveOccurred(t)
+			if res != nil {
+				res.Body.Close()
+			}
 
 			p := strings.Split(tag, " ")
 			expect.Error(err).I("%s %q", method, tag).Not().ToHaveOccurred(t)
@@ -50,6 +53,48 @@ func Test_all_methods_various_inputs_without_response_204(t *testing.T) {
 			expect.String(testClient.Captured.Header.Get("Content-Type")).I("%s %q", method, tag).ToBe(t, p[2])
 			expect.String(testClient.Captured.Header.Get("Accept")).I("%s %q", method, tag).ToBe(t, contenttype.ApplicationJSON)
 		}
+	}
+}
+
+func Test_3xx_4xx_5xx(t *testing.T) {
+	cases := []struct {
+		contentType string
+		headers     map[string]string
+		msg         string
+		statusCode  int
+		transient   bool
+	}{
+		{headers: map[string]string{"Location": "/other"}, msg: `301: GET http://x.te/ moved permanently /other`, statusCode: http.StatusMovedPermanently},
+		{headers: map[string]string{"Location": "/other"}, msg: `302: GET http://x.te/ found /other`, statusCode: http.StatusFound},
+		{headers: map[string]string{"Location": "/other"}, msg: `303: GET http://x.te/ see other /other`, statusCode: http.StatusSeeOther},
+		{headers: map[string]string{}, msg: `400: GET http://x.te/`, statusCode: http.StatusBadRequest},
+		{headers: map[string]string{"Content-Type": "image/png"}, msg: `404: GET http://x.te/ image/png`, statusCode: http.StatusNotFound},
+		{headers: map[string]string{"Content-Type": "text/plain"}, msg: `404: GET http://x.te/ text/plain that was bad`, statusCode: http.StatusNotFound},
+		{headers: map[string]string{"Content-Type": "text/plain"}, msg: `500: GET http://x.te/ text/plain that was bad`, statusCode: http.StatusInternalServerError, transient: true},
+		{headers: map[string]string{"Content-Type": "text/plain"}, msg: `503: GET http://x.te/ text/plain that was bad`, statusCode: http.StatusServiceUnavailable, transient: true},
+	}
+
+	for _, c := range cases {
+		resp := fmt.Sprintf("HTTP/1.1 %d %s\n", c.statusCode, http.StatusText(c.statusCode))
+		for k, v := range c.headers {
+			resp += fmt.Sprintf("%s: %s\n", k, v)
+		}
+		resp += `Content-Length: 14
+
+that was bad
+`
+		testClient := mytesting.StubHttpWithBody(resp)
+
+		cl := NewClient("http://x.te", SetHttpClient(testClient))
+		res, err := cl.Get(context.Background(), "/")
+
+		expect.Error(err).I(c.statusCode).ToContain(t, c.msg)
+		expect.Bool(err.(*RestError).IsTransient()).I(c.statusCode).ToBe(t, c.transient)
+		expect.Bool(err.(*RestError).IsPermanent()).I(c.statusCode).ToBe(t, !c.transient)
+		expect.Number(res.StatusCode).I(c.statusCode).ToBe(t, c.statusCode)
+		expect.Number(len(res.Header)).I(c.statusCode).ToBeGreaterThanOrEqual(t, 1)
+		expect.String(testClient.Captured.Method).I(c.statusCode).ToBe(t, "GET")
+		expect.String(res.Body.String()).I(c.statusCode).ToBe(t, `that was bad`+"\n")
 	}
 }
 

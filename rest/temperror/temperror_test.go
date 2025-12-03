@@ -2,7 +2,6 @@ package temperror
 
 import (
 	"context"
-	"errors"
 	"net"
 	"testing"
 	"time"
@@ -32,12 +31,4 @@ func TestConnect_failed(t *testing.T) {
 
 	matched := NetworkConnectionError(err)
 	expect.Bool(matched).ToBeTrue(t)
-}
-
-func TestTransientError(t *testing.T) {
-	err := Wrap(errors.New("foo")).(*TransientError)
-	expect.String(err.Error()).ToBe(t, "transient error: foo")
-	expect.String(err.Unwrap().Error()).ToBe(t, "foo")
-	expect.Bool(IsPermanent(err)).ToBeFalse(t)
-	expect.Bool(IsTransient(err)).ToBeTrue(t)
 }
