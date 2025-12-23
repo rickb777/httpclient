@@ -31,9 +31,11 @@ type noAuth struct {
 	pw   string
 }
 
+const None = "None"
+
 // Type identifies the authenticator.
 func (n *noAuth) Type() string {
-	return "NoAuth"
+	return None
 }
 
 // User returns the current user.

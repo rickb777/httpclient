@@ -7,37 +7,49 @@ import (
 	"io"
 	"net/http"
 	urlpkg "net/url"
+	pathpkg "path"
 	"strconv"
 	"strings"
 
 	. "github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/header"
-	"github.com/rickb777/acceptable/headername"
+	hdr "github.com/rickb777/acceptable/headername"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
 )
 
+// PathEscape escapes each segment in the path, leaving the '/' separators intact.
+func PathEscape(path string) string {
+	segments := strings.Split(path, "/")
+	for i, segment := range segments {
+		segments[i] = urlpkg.PathEscape(segment)
+	}
+	return pathpkg.Join(segments...)
+}
+
 // Request performs one or more round-trip HTTP requests, attempting to satisfy the authentication challenge
-// if one is received. The bare *http.Response is returned; this contains the response entity as io.ReadCloser,
+// if one is received.
+//
+// The path is prefixed by the client's endpoint. It is passed verbatim so should already be path-escaped
+// if necessary - see [PathEscape].
+//
+// The bare *http.Response is returned; this contains the response entity as io.ReadCloser,
 // which is useful if this is to be read as a stream. If res is not nil, the response body must be closed by
 // the caller.
 func (c *client) Request(ctx context.Context, method, path string, reqBody any, opts ...ReqOpt) (res *http.Response, err error) {
 	return c.request(ctx, 1, method, path, reqBody, opts...)
 }
 
-// Request performs one or more round-trip HTTP requests, attempting to satisfy the authentication challenge
-// if one is received. The bare *http.Response is returned; this contains the response entity as io.ReadCloser,
-// which is useful if this is to be read as a stream. If res is not nil, the response body must be closed by
-// the caller.
 func (c *client) request(ctx context.Context, depth int, method, path string, reqBody any, opts ...ReqOpt) (res *http.Response, err error) {
 	var req *http.Request
+
 	// Buffer the body because, if authorization fails, we will need to read from it again.
-	bodyBuf, hdrs, err := processRequestEntity(reqBody)
+	bodyBuf, hdrs, defaults, err := processRequestEntity(reqBody)
 	if err != nil {
 		return nil, err
 	}
 
-	u := c.root + withLeadingSlash(path) // TODO pathEscape removed here
+	u := c.root + withLeadingSlash(path)
 	req, err = http.NewRequestWithContext(ctx, method, u, bodyBuf)
 
 	if err != nil {
@@ -56,7 +68,7 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 		}
 	}
 
-	// request-scoped headers
+	// request-scoped options - mostly headers
 	for _, opt := range opts {
 		opt(req)
 	}
@@ -64,6 +76,13 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 	// headers determined by the request entity
 	for k, vs := range hdrs {
 		req.Header[k] = vs
+	}
+
+	// headers suggested by the request entity (don't override existing header values)
+	for k, vs := range defaults {
+		if _, exists := req.Header[k]; !exists {
+			req.Header[k] = vs
+		}
 	}
 
 	// Make sure we read 'c.auth' only once because it may be substituted below,
@@ -80,7 +99,7 @@ func (c *client) request(ctx context.Context, depth int, method, path string, re
 		return nil, err
 	}
 
-	if res.StatusCode == http.StatusUnauthorized && auth.Type() == "noAuth" {
+	if res.StatusCode == http.StatusUnauthorized && auth.Type() == authpkg.None {
 		if depth > 3 {
 			r2, e2 := copyResponse(res, nil)
 			return nil, &RestError{
@@ -129,48 +148,51 @@ func (c *client) repeat(ctx context.Context, depth int, res *http.Response, meth
 
 //-------------------------------------------------------------------------------------------------
 
-func processRequestEntity(input any) (requestBody *bodypkg.Body, hdr http.Header, err error) {
-	m := make(http.Header)
-	m.Set(headername.Accept, ApplicationJSON)
-	m.Set(headername.AcceptEncoding, "identity")
+func processRequestEntity(input any) (requestBody *bodypkg.Body, required, defaults http.Header, err error) {
+	required = make(http.Header)
+	defaults = make(http.Header)
 
 	switch data := input.(type) {
 	case nil:
 	case urlpkg.Values:
-		m.Set(headername.ContentType, ApplicationForm)
+		required.Set(hdr.ContentType, ApplicationForm)
 		requestBody = bodypkg.NewBodyString(data.Encode())
 	case string:
-		m.Set(headername.ContentType, ApplicationJSON)
+		defaults.Set(hdr.ContentType, ApplicationJSON)
 		requestBody = bodypkg.NewBodyString(data)
 	case *string:
-		m.Set(headername.ContentType, ApplicationJSON)
+		defaults.Set(hdr.ContentType, ApplicationJSON)
 		requestBody = bodypkg.NewBodyString(*data)
 	case []byte:
-		// must set earlier: m.Set(headername.ContentType, ...)
-		m.Set(headername.ContentLength, strconv.Itoa(len(data)))
+		// ContentType must set elsewhere
+		required.Set(hdr.ContentLength, strconv.Itoa(len(data)))
 		requestBody = bodypkg.NewBody(data)
 	case io.Reader:
-		// must set earlier: m.Set(headername.ContentType, ...)
+		// ContentType must set elsewhere
 		requestBody, err = bodypkg.Copy(data)
+	case bodypkg.Body:
+		// ContentType must set elsewhere
+		requestBody = &data
 	case *bodypkg.Body:
+		// ContentType must set elsewhere
 		requestBody = data
 	case ReqOpt:
-		panic("ReqOpt passed instead of a body - did you mean this?")
+		panic("ReqOpt passed instead of a body - please fix this")
 	default:
-		rb, err := bodypkg.JsonMarshalToString(data)
-		if err != nil {
-			panic(err)
+		rb, e2 := bodypkg.JsonMarshalToString(data)
+		if e2 != nil {
+			panic(e2)
 		}
-		rb += "\n" // required for Posix compliance
-		requestBody = bodypkg.NewBodyString(rb)
-		m.Set(headername.ContentType, ApplicationJSON)
+		// "\n" is required for Posix compliance
+		requestBody = bodypkg.NewBodyString(rb + "\n")
+		required.Set(hdr.ContentType, ApplicationJSON)
 	}
 
 	if requestBody != nil {
-		m.Set(headername.ContentLength, strconv.Itoa(len(requestBody.Bytes())))
+		required.Set(hdr.ContentLength, strconv.Itoa(len(requestBody.Bytes())))
 	}
 
-	return requestBody, m, err
+	return requestBody, required, defaults, err
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -225,8 +247,8 @@ func copyResponse(res *http.Response, err error) (Response, error) {
 			}
 		}
 
-		ct := header.ParseContentType(res.Header.Get(headername.ContentType))
-		delete(res.Header, headername.ContentType)
+		ct := header.ParseContentType(res.Header.Get(hdr.ContentType))
+		delete(res.Header, hdr.ContentType)
 
 		r = Response{
 			StatusCode: res.StatusCode,
@@ -257,7 +279,7 @@ func responseOf(res *http.Response, err error) (*Response, error) {
 		return &r, &RestError{
 			Response: r,
 			Cause: errors.Join(err2,
-				fmt.Errorf("%s: %s", http.StatusText(r.StatusCode), r.Header.Get(headername.Location))),
+				fmt.Errorf("%s: %s", http.StatusText(r.StatusCode), r.Header.Get(hdr.Location))),
 		}
 	}
 

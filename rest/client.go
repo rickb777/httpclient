@@ -7,7 +7,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/rickb777/acceptable/contenttype"
 	"github.com/rickb777/acceptable/header"
+	hdr "github.com/rickb777/acceptable/headername"
 	"github.com/rickb777/httpclient"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
@@ -77,6 +79,16 @@ func NewClient(uri string, opts ...ClientOpt) RestClient {
 
 // ClientOpt functions configure the client.
 type ClientOpt func(RestClient)
+
+// REST sets the following headers typical of REST requests on all requests:
+//   - Accept: application/json
+//   - Accept-Encoding: identity
+func REST() ClientOpt {
+	return func(c RestClient) {
+		c.(*client).headers.Set(hdr.Accept, contenttype.ApplicationJSON)
+		c.(*client).headers.Set(hdr.AcceptEncoding, "identity")
+	}
+}
 
 // AddHeader sets a request header that will be applied to all subsequent requests.
 func AddHeader(key, value string) ClientOpt {
