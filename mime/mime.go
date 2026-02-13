@@ -18,6 +18,7 @@ var once sync.Once
 // as special cases:
 //
 // * "text/plain": ".txt"
+// * "text/html": ".html"
 // * "application/octet-stream": ".bin"
 // * "application/xml": ".xml"
 func FileExtension(mimeType string) string {
@@ -34,6 +35,8 @@ func FileExtension(mimeType string) string {
 	switch ctl {
 	case "text/plain":
 		return ".txt"
+	case "text/html":
+		return ".html"
 	case "application/xml":
 		return ".xml"
 	case "application/octet-stream":
@@ -50,7 +53,7 @@ func FileExtension(mimeType string) string {
 
 // ExtensionsByType returns the extensions known to be associated with the MIME
 // type typ. The returned extensions will each begin with a leading dot, as in
-// ".html". When typ has no associated extensions, ExtensionsByType returns an
+// ".html". When typ has no associated extensions, ExtensionsByType returns a
 // nil slice.
 func ExtensionsByType(typ string) ([]string, error) {
 	return mimepkg.ExtensionsByType(typ)
@@ -67,7 +70,7 @@ func ExtensionsByType(typ string) ([]string, error) {
 // * "image/*+xml"
 //
 // where "*" is a wildcard.
-// Deprecated: use rickb777/acceptable [header.ResponseType].
+// Deprecated: use github.com/rickb777/acceptable [header.ResponseType].
 func IsTextual(contentType string) bool {
 	ct, _, _ := mimepkg.ParseMediaType(contentType)
 	ps := strings.SplitN(strings.TrimSpace(ct), "/", 2)

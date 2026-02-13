@@ -5,26 +5,39 @@ import (
 	"testing"
 )
 
-func TestFileExtension(t *testing.T) {
-	cases := map[string]string{
+func TestFileExtension_good(t *testing.T) {
+	goodCases := map[string]string{
 		"text/plain":               ".txt",
 		"text/html":                ".html",
 		"application/octet-stream": ".bin",
 		"application/pdf":          ".pdf",
 		"application/xml":          ".xml",
 		"image/gif":                ".gif",
-		"unknown/thing":            "",
 	}
-	for ct, exp := range cases {
-		e := FileExtension(ct)
-		expect.String(e).Info(ct).ToBe(t, exp)
+	for ct, exp := range goodCases {
+		e0 := FileExtension(ct)
+		expect.String(e0).Info(ct).ToBe(t, exp)
+
+		es, err := ExtensionsByType(ct)
+		expect.Slice(es, err).Info(ct).ToContain(t, exp)
+	}
+}
+
+func TestFileExtension_bad(t *testing.T) {
+	badCases := map[string]string{
+		"unknown/thing": "",
+	}
+	for ct, exp := range badCases {
+		e0 := FileExtension(ct)
+		expect.String(e0).Info(ct).ToBe(t, exp)
 	}
 }
 
 func TestIsTextual(t *testing.T) {
 	t.Run("true", func(t *testing.T) {
 		cases := []string{
-			"text/plain", "text/html",
+			"text/plain",
+			"text/html",
 			"application/json",
 			"application/calendar+json",
 			"application/xml",
