@@ -1,5 +1,5 @@
 #!/bin/bash -ex
 cd "$(dirname "$0")"
 go install tool
-mage build coverage
+mage build testcoverage
 cat report.out

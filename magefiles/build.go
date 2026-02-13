@@ -27,7 +27,7 @@ func Build() error {
 	return nil
 }
 
-func Coverage() error {
+func TestCoverage() error {
 	if err := sh.RunV("go", "test", "-cover", "./...", "-coverprofile", "coverage.out", "-coverpkg", "./..."); err != nil {
 		return err
 	}

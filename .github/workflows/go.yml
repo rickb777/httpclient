@@ -26,7 +26,7 @@ jobs:
         run: go install tool
 
       - name: Test
-        run: mage build coverage
+        run: mage build testcoverage
 
       - name: Coveralls
         uses: coverallsapp/github-action@v2
