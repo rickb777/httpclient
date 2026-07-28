@@ -8,7 +8,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/magefile/mage v1.17.2
 	github.com/rickb777/acceptable v0.82.0
-	github.com/rickb777/expect v1.3.2
+	github.com/rickb777/expect v1.3.3
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
 	golang.org/x/net v0.57.0
@@ -20,7 +20,7 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/rickb777/enumeration/v4 v4.1.2 // indirect
+	github.com/rickb777/enumeration/v4 v4.1.3 // indirect
 	github.com/rickb777/plural/v2 v2.1.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	golang.org/x/sys v0.47.0 // indirect
