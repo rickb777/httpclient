@@ -27,10 +27,10 @@ github.com/rickb777/acceptable v0.83.0 h1:7czEm4pVcRiJyhX7PoleDMFdIhHhByTVXrDIN6
 github.com/rickb777/acceptable v0.83.0/go.mod h1:rg7BLzOFYiJV5Xiq3kXVR9FJT7jEglDHA7dqhfL1eNA=
 github.com/rickb777/enumeration/v4 v4.1.4 h1:KhVdUNUQmx0XHotNtfC0rM/WkwYMNqhHwNc0HZTwB4I=
 github.com/rickb777/enumeration/v4 v4.1.4/go.mod h1:/0prOTTSFXsznMTKrfNsnINOGNhKEq7JnMadY9ZLZ/g=
-github.com/rickb777/expect v1.3.3 h1:MzLKKABqnSIW3t+2HZm8k25WnT7MdCircIH1SQYmcqo=
-github.com/rickb777/expect v1.3.3/go.mod h1:PnKIXmYP9Eo+ZhiFoGSQrmyvIgubFw7hD/4SaKo0mdc=
-github.com/rickb777/plural/v2 v2.1.0 h1:2TsGzyoTSRnXPsyEV3j2fET9s8nz6ThEXlBXxg6q7vY=
-github.com/rickb777/plural/v2 v2.1.0/go.mod h1:VQ7T01f3Xi9EqnIE0vMBw3351Bj2xWVle4TOccdlB7I=
+github.com/rickb777/expect v1.3.4 h1:b51hSqdTDdH8xY2y6DgHRNkxKtsAAKIQFNZ7Lf0PbOA=
+github.com/rickb777/expect v1.3.4/go.mod h1:YQhUXHEeFrxMrH/NNwISBCgt+A82EC4Xvx3E5/2q+DE=
+github.com/rickb777/plural/v2 v2.1.1 h1:PnnkkMn62hxJIfdBWaPKH3jUFJQliqqGEqHAYhnINVs=
+github.com/rickb777/plural/v2 v2.1.1/go.mod h1:VQ7T01f3Xi9EqnIE0vMBw3351Bj2xWVle4TOccdlB7I=
 github.com/rs/zerolog v1.35.1 h1:m7xQeoiLIiV0BCEY4Hs+j2NG4Gp2o2KPKmhnnLiazKI=
 github.com/rs/zerolog v1.35.1/go.mod h1:EjML9kdfa/RMA7h/6z6pYmq1ykOuA8/mjWaEvGI+jcw=
 github.com/spf13/afero v1.15.0 h1:b/YBCLWAJdFWJTN9cLhiXXcD7mzKn9Dm86dNnfyQw1I=
