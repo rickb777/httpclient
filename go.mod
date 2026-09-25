@@ -7,7 +7,7 @@ require (
 	github.com/go-xmlfmt/xmlfmt v1.1.3
 	github.com/json-iterator/go v1.1.12
 	github.com/magefile/mage v1.17.2
-	github.com/rickb777/acceptable v0.85.0
+	github.com/rickb777/acceptable v1.0.0
 	github.com/rickb777/expect v1.3.4
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
