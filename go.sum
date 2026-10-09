@@ -21,8 +21,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJ
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rickb777/acceptable v1.0.0 h1:CZ3zd25ykBnQWNo+qmpS7zEBOd9xclPvGgfR0UKSia0=
-github.com/rickb777/acceptable v1.0.0/go.mod h1:EfvxYmAFLa0H7od1D1jQwX0cKEXAn2YJZ39bj9u/3Qo=
+github.com/rickb777/acceptable v1.0.2 h1:r7ptuzuEJLWwshgElYO9EoqGIMFAZIUnba0gnte+/wk=
+github.com/rickb777/acceptable v1.0.2/go.mod h1:W9XE04CQA0K6pfSJoJ5612LzI5P8W1VVnDxxAIQ2Sq4=
 github.com/rickb777/enumeration/v4 v4.1.5 h1:YUhvkqGwTySyxAre0+FgK+Bfz5RmI4vI8wsyp2bYimA=
 github.com/rickb777/enumeration/v4 v4.1.5/go.mod h1:0NjziMaP/Fy2VnXZbJpbg9XyDEkOZq6WOR+6cVbk72s=
 github.com/rickb777/expect v1.3.4 h1:b51hSqdTDdH8xY2y6DgHRNkxKtsAAKIQFNZ7Lf0PbOA=
@@ -39,8 +39,8 @@ github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWD
 github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
 go.yaml.in/yaml/v3 v3.0.5/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
-golang.org/x/net v0.59.0 h1:5zfYln+w5XCxwrnMMJPufRgNoXEaGxl0wo5GqPXyues=
-golang.org/x/net v0.59.0/go.mod h1:2DA/G1UfVbCpQPeWTmMPGY7Cs2PkBkwu743bVX5PIVg=
+golang.org/x/net v0.60.0 h1:79p50tfZlm0J9YfoDsSi639qSXNGVwEzOPLCxM2FsYU=
+golang.org/x/net v0.60.0/go.mod h1:2DA/G1UfVbCpQPeWTmMPGY7Cs2PkBkwu743bVX5PIVg=
 golang.org/x/sys v0.48.0 h1:bbX/i/6MgT9BVLM9RT1thmxL04yeTAhbEz4SyadbXoo=
 golang.org/x/sys v0.48.0/go.mod h1:hNLxWAXmnKAxqDtdwIYC4bM9oQPEecfsnNMuSxOs3og=
 golang.org/x/text v0.42.0 h1:JbOZXgfeCPU9gacVtYliJqOhD+zhrEqK4LfdpmlUZqI=
