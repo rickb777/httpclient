@@ -7,11 +7,11 @@ require (
 	github.com/go-xmlfmt/xmlfmt v1.1.3
 	github.com/json-iterator/go v1.1.12
 	github.com/magefile/mage v1.17.2
-	github.com/rickb777/acceptable v1.0.2
+	github.com/rickb777/acceptable v1.0.3
 	github.com/rickb777/expect v1.3.4
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/afero v1.15.0
-	golang.org/x/net v0.60.0
+	golang.org/x/net v0.62.0
 )
 
 require (
@@ -23,8 +23,8 @@ require (
 	github.com/rickb777/enumeration/v4 v4.1.5 // indirect
 	github.com/rickb777/plural/v2 v2.1.1 // indirect
 	github.com/stretchr/testify v1.12.1 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
 
 tool (
