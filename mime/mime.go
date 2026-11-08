@@ -70,7 +70,7 @@ func ExtensionsByType(typ string) ([]string, error) {
 // * "image/*+xml"
 //
 // where "*" is a wildcard.
-// Deprecated: use github.com/rickb777/acceptable [header.ResponseType].
+// Deprecated: use github.com/rickb777/acceptable/v2 [header.ResponseType].
 func IsTextual(contentType string) bool {
 	ct, _, _ := mimepkg.ParseMediaType(contentType)
 	ps := strings.SplitN(strings.TrimSpace(ct), "/", 2)

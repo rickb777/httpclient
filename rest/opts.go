@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rickb777/acceptable/header"
-	hdr "github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/acceptable/v2/header"
+	hdr "github.com/rickb777/acceptable/v2/headername"
 )
 
 // ReqOpt optionally amends or enhances a request before it is sent.

@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/v2/header"
 	"github.com/rickb777/expect"
 	"github.com/rickb777/httpclient/body"
 )

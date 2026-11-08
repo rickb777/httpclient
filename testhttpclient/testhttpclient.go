@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rickb777/acceptable/contenttype"
-	"github.com/rickb777/acceptable/headername"
+	"github.com/rickb777/acceptable/v2/contenttype"
+	"github.com/rickb777/acceptable/v2/headername"
 	"github.com/rickb777/expect"
 	bodypkg "github.com/rickb777/httpclient/body"
 )

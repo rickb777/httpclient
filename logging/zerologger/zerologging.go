@@ -3,18 +3,19 @@ package zerologger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rickb777/acceptable/header"
+	"log"
+	"net/http"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/rickb777/acceptable/v2/header"
 	bodypkg "github.com/rickb777/httpclient/file"
 	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/logging/logger"
 	"github.com/rickb777/httpclient/mime"
 	"github.com/rs/zerolog"
 	"github.com/spf13/afero"
-	"log"
-	"net/http"
-	"sort"
-	"strings"
-	"time"
 )
 
 var (

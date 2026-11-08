@@ -8,7 +8,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/rickb777/acceptable/header"
+	"github.com/rickb777/acceptable/v2/header"
 	"github.com/rickb777/httpclient"
 	filepkg "github.com/rickb777/httpclient/file"
 	"github.com/rickb777/httpclient/mime"

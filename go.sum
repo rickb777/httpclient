@@ -21,8 +21,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJ
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rickb777/acceptable v1.0.3 h1:r24ceo4JozhYuioRlYwWV4NZ11fWz+cKXKObtnTEzFY=
-github.com/rickb777/acceptable v1.0.3/go.mod h1:spYSLoTe0b4hTc8H6KHHrvwx/rM/oygMmTPVB3X1bV8=
+github.com/rickb777/acceptable/v2 v2.0.1 h1:PbXk8YkDxEaFqFSuVrr24Y2ywe0Gr/wwAkviYNqhGPA=
+github.com/rickb777/acceptable/v2 v2.0.1/go.mod h1:tjgr8tWGlNP5XEyYnubTvgCgwqtyxxm9UpDo6exVfsg=
 github.com/rickb777/enumeration/v4 v4.1.5 h1:YUhvkqGwTySyxAre0+FgK+Bfz5RmI4vI8wsyp2bYimA=
 github.com/rickb777/enumeration/v4 v4.1.5/go.mod h1:0NjziMaP/Fy2VnXZbJpbg9XyDEkOZq6WOR+6cVbk72s=
 github.com/rickb777/expect v1.3.4 h1:b51hSqdTDdH8xY2y6DgHRNkxKtsAAKIQFNZ7Lf0PbOA=

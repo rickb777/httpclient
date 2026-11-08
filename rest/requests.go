@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/rickb777/acceptable/contenttype"
-	"github.com/rickb777/acceptable/header"
-	hdr "github.com/rickb777/acceptable/headername"
+	. "github.com/rickb777/acceptable/v2/contenttype"
+	"github.com/rickb777/acceptable/v2/header"
+	hdr "github.com/rickb777/acceptable/v2/headername"
 	authpkg "github.com/rickb777/httpclient/auth"
 	bodypkg "github.com/rickb777/httpclient/body"
 )
